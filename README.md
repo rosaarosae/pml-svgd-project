@@ -1,20 +1,32 @@
 # Stein Variational Gradient Descent
 
-Small project exploring **Stein Variational Gradient Descent (SVGD)** for
-particle-based approximate Bayesian inference.
+Project on particle-based approximate Bayesian inference using **Stein Variational
+Gradient Descent (SVGD)**.
 
-## Scope
+## Objectives
 
-The project considers two applications:
+- Study the main ideas behind SVGD and its particle update.
+- Implement a reusable SVGD method.
+- Apply SVGD to one- and two-dimensional Gaussian mixture models.
+- Use SVGD to approximate the posterior distribution over the weights of a Bayesian
+  neural network.
+- Analyse predictive performance and uncertainty.
 
-1. Approximating a one- or two-dimensional Gaussian mixture model.
-2. Approximating the posterior distribution over the weights of a Bayesian neural
-   network.
+## Main references
 
-The repository currently contains an initial one-dimensional Gaussian mixture
-example.
+- Q. Liu and D. Wang, “Stein Variational Gradient Descent: A General Purpose
+  Bayesian Inference Algorithm,” *Advances in Neural Information Processing
+  Systems 29*, 2016. [Paper](https://proceedings.neurips.cc/paper/2016/hash/b3ba8f1bee1238a2f37603d90b58898d-Abstract.html)
+- DartML, “Stein-Variational-Gradient-Descent.”
+  [Reference implementation](https://github.com/DartML/Stein-Variational-Gradient-Descent)
 
-![SVGD Gaussian mixture result](experiments/results/svgd_gmm_1d.png)
+Additional references and documentation are listed in [SOURCES.md](SOURCES.md).
+
+## Structure
+
+- `experiments/`: implementations and results.
+- `presentation/`: LaTeX Beamer presentation.
+- `SOURCES.md`: references and technical documentation.
 
 ## Setup
 
@@ -23,17 +35,3 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
-
-## Run the example
-
-```bash
-python experiments/svgd_gmm_1d.py
-```
-
-The script saves the resulting figure to `experiments/results/svgd_gmm_1d.png`.
-
-## Repository structure
-
-- `experiments/`: implementations and generated results.
-- `presentation/`: placeholder for a future Beamer presentation.
-- `SOURCES.md`: primary references and documentation.
