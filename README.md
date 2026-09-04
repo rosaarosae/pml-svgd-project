@@ -8,6 +8,7 @@ Gradient Descent (SVGD)**.
 - Study the main ideas behind SVGD and its particle update.
 - Implement a reusable SVGD method.
 - Apply SVGD to one- and two-dimensional Gaussian mixture models.
+- Explore the connection between SVGD and energy-based models.
 - Use SVGD to approximate the posterior distribution over the weights of a Bayesian
   neural network.
 - Analyse predictive performance and uncertainty.
@@ -20,13 +21,14 @@ Gradient Descent (SVGD)**.
 - DartML, “Stein-Variational-Gradient-Descent.”
   [Reference implementation](https://github.com/DartML/Stein-Variational-Gradient-Descent)
 
-Additional references and documentation are listed in [SOURCES.md](SOURCES.md).
+The complete course and project bibliography is available in
+[references/README.md](references/README.md).
 
 ## Structure
 
 - `experiments/`: implementations and results.
 - `presentation/`: LaTeX Beamer presentation.
-- `SOURCES.md`: references and technical documentation.
+- `references/`: official course material, textbooks, and project papers.
 
 ## Setup
 
