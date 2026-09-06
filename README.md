@@ -42,6 +42,7 @@ The complete course and project bibliography is available in
 ## Structure
 
 - `experiments/`: validation, model training, comparisons, and results.
+- `notes/`: concise mathematical background needed to understand the project.
 - `presentation/`: LaTeX Beamer presentation.
 - `references/`: official course material, textbooks, and project papers.
 
