@@ -16,9 +16,10 @@ verified and understood.
 
 - [x] Understand EBM, score, Langevin dynamics, SVGD, and contrastive negative
       samples.
-- [ ] **Current task:** Implement Langevin dynamics on the one-dimensional
-      Gaussian mixture and analyse drift, noise, and step size.
-- [ ] Compare Langevin and SVGD on the same known one-dimensional target.
+- [x] Implement Langevin dynamics on the one-dimensional Gaussian mixture and
+      analyse drift, noise, and step size.
+- [ ] **Current task:** Compare Langevin and SVGD on the same known
+      one-dimensional target.
 
 ## Main two-dimensional experiment
 

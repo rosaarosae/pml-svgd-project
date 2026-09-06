@@ -37,14 +37,18 @@ def score(x: np.ndarray) -> np.ndarray:
 
 
 # Apply repeated drift and diffusion updates to the complete particle set.
-def langevin(particles: np.ndarray, rng) -> np.ndarray:
+def langevin(
+    particles: np.ndarray,
+    rng,
+    stepsize: float = STEPSIZE,
+) -> np.ndarray:
     for step in range(NSTEPS):
         # The drift follows the score towards regions of higher probability.
         #this is the drift term, and it moves the particles in the direction of the score function
-        particles += STEPSIZE * score(particles)
+        particles += stepsize * score(particles)
         # The diffusion noise lets the particles explore the target distribution.
         #this is the diffusion term, and it adds noise to the particles
-        particles += np.sqrt(2.0 * STEPSIZE) * rng.normal(size=particles.shape)
+        particles += np.sqrt(2.0 * stepsize) * rng.normal(size=particles.shape)
     return particles
 
 def main() -> None:
