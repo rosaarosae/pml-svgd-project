@@ -25,6 +25,8 @@ The existing one-dimensional Gaussian mixture is an initial validation example.
 The main experiment will use a multimodal two-dimensional Gaussian mixture so
 that the true density and learned energy landscape can be evaluated directly.
 
+Progress is tracked in the [project checklist](TASKS.md).
+
 ## Main references
 
 - Q. Liu and D. Wang, “Stein Variational Gradient Descent: A General Purpose
@@ -45,6 +47,7 @@ The complete course and project bibliography is available in
 - `notes/`: concise mathematical background needed to understand the project.
 - `presentation/`: LaTeX Beamer presentation.
 - `references/`: official course material, textbooks, and project papers.
+- `TASKS.md`: project-wide checklist and completion criteria.
 
 ## Setup
 
