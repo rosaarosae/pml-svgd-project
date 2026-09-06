@@ -1,9 +1,14 @@
 # Experiments
 
-## Initial example
+## Initial validation
 
-`svgd_gmm_1d.py` is a small one-dimensional Gaussian mixture example used to test
-the initial SVGD implementation.
+`svgd_gmm_1d.py` is a small one-dimensional Gaussian mixture example used to
+validate the initial SVGD implementation. It is not the main project experiment.
+
+The main experiment will train the same two-dimensional neural EBM twice, using
+either Langevin dynamics or SVGD to generate the negative samples. The two
+versions will be compared using multiple random seeds and the same computational
+budget.
 
 Run it from the repository root with the environment activated:
 

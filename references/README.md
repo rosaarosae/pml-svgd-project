@@ -40,6 +40,9 @@ score-based diffusion models (Chapter 11), and kernel methods (Chapter 12).
   [Reference implementation](https://github.com/DartML/Stein-Variational-Gradient-Descent)
 - Yang Song and Diederik P. Kingma, “How to Train Your Energy-Based Models,”
   2021. [Paper](https://arxiv.org/abs/2101.03288)
+- Priyank Jaini, Lars Holdijk, and Max Welling, “Learning Equivariant Energy
+  Based Models with Equivariant Stein Variational Gradient Descent,” 2021.
+  [Paper](https://arxiv.org/abs/2106.07832)
 - Shuangfei Zhai et al., “Deep Structured Energy Based Models for Anomaly
   Detection,” ICML 2016. [Paper](https://arxiv.org/abs/1605.07717)
 - Will Grathwohl et al., “Your Classifier is Secretly an Energy Based Model and
@@ -48,7 +51,7 @@ score-based diffusion models (Chapter 11), and kernel methods (Chapter 12).
 - Phillip Lippe, “Deep Energy-Based Generative Models,” UvA Deep Learning
   Tutorials. [Tutorial](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial8/Deep_Energy_Models.html)
 - Sadegh Aliakbarian, *Energy Models: Energy, Score, and Diffusion*, 2025.
-  [Notes](https://sadeghaa.github.io/projects/aliakbarian_energy_models_note_2025.pdf)
+  [Notes](https://sadegh-aa.github.io/projects/aliakbarian_energy_models_note_2025.pdf)
 
 ## Course-project requirements
 
