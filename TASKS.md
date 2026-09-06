@@ -20,6 +20,10 @@ verified and understood.
       analyse drift, noise, and step size.
 - [ ] **Current task:** Compare Langevin and SVGD on the same known
       one-dimensional target.
+  - [ ] Run both methods from the same initial particles.
+  - [ ] Create a three-panel initial/Langevin/SVGD figure.
+  - [ ] Compare mode balance, mean log density, and runtime.
+  - [ ] Repeat the comparison across multiple random seeds.
 
 ## Main two-dimensional experiment
 
