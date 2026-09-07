@@ -19,7 +19,7 @@ verified and understood.
 - [ ] **Current task:** Implement a numerical check that the EBM score is the
       negative input gradient of its energy.
 - [ ] Reproduce and explain the Langevin step-size sensitivity check.
-- [ ] Implement and understand SVGD on the one-dimensional Gaussian mixture,
+- [ ] Study and explain the existing one-dimensional SVGD implementation,
       including its attraction and repulsion terms.
 - [ ] Compare Langevin and SVGD on the same known one-dimensional target.
   - [ ] Run both methods from the same initial particles.
