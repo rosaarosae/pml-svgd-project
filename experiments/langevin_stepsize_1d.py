@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
-from experiments.langevin_gmm_1d import NPARTICLES, SEED, density, langevin
+from langevin_gmm_1d import NPARTICLES, SEED, density, langevin
 
 #we put different values of the step size in a list
 step_sizes = [0.003, 0.01, 0.03, 0.1,0.3, 1.0]
