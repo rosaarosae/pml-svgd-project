@@ -9,17 +9,19 @@ verified and understood.
 - [x] Define a focused research question for the project.
 - [x] Review the core SVGD, EBM, score-matching, and course references.
 - [x] Create and organise the local and GitHub repositories.
-- [x] Implement an initial one-dimensional SVGD validation.
-- [x] Verify numerically that the EBM score is the negative energy gradient.
 
 ## Foundations and sampler validation
 
 - [x] Understand EBM, score, Langevin dynamics, SVGD, and contrastive negative
       samples.
 - [x] Implement Langevin dynamics on the one-dimensional Gaussian mixture and
-      analyse drift, noise, and step size.
-- [ ] **Current task:** Compare Langevin and SVGD on the same known
-      one-dimensional target.
+      explain its drift and diffusion terms.
+- [ ] **Current task:** Implement a numerical check that the EBM score is the
+      negative input gradient of its energy.
+- [ ] Reproduce and explain the Langevin step-size sensitivity check.
+- [ ] Implement and understand SVGD on the one-dimensional Gaussian mixture,
+      including its attraction and repulsion terms.
+- [ ] Compare Langevin and SVGD on the same known one-dimensional target.
   - [ ] Run both methods from the same initial particles.
   - [ ] Create a three-panel initial/Langevin/SVGD figure.
   - [ ] Compare mode balance, mean log density, and runtime.
