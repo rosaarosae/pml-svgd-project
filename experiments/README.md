@@ -7,10 +7,12 @@ plots and diagnostics for the preliminary sampler validation.
 
 `svgd_gmm_1d.py` provides the corresponding one-dimensional SVGD validation.
 
-The next validation steps are to implement the score–energy identity check,
-study Langevin step-size sensitivity, understand the existing SVGD code, and
-compare both samplers on the same target. Progress is recorded in the project
-checklist.
+`score_energy_check.py` numerically verifies that the target score equals the
+negative input derivative of its energy.
+
+The next validation steps are to study Langevin step-size sensitivity,
+understand the existing SVGD code, and compare both samplers on the same target.
+Progress is recorded in the project checklist.
 
 The main experiment will train the same two-dimensional neural EBM twice, using
 either Langevin dynamics or SVGD to generate the negative samples. The two
@@ -20,6 +22,7 @@ budget.
 Run it from the repository root with the environment activated:
 
 ```bash
+python experiments/score_energy_check.py
 python experiments/langevin_gmm_1d.py
 python experiments/svgd_gmm_1d.py
 ```

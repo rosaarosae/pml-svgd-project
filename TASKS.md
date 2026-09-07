@@ -16,9 +16,10 @@ verified and understood.
       samples.
 - [x] Implement Langevin dynamics on the one-dimensional Gaussian mixture and
       explain its drift and diffusion terms.
-- [ ] **Current task:** Implement a numerical check that the EBM score is the
-      negative input gradient of its energy.
-- [ ] Reproduce and explain the Langevin step-size sensitivity check.
+- [x] Implement a numerical check that the EBM score is the negative input
+      gradient of its energy.
+- [ ] **Current task:** Reproduce and explain the Langevin step-size
+      sensitivity check.
 - [ ] Study and explain the existing one-dimensional SVGD implementation,
       including its attraction and repulsion terms.
 - [ ] Compare Langevin and SVGD on the same known one-dimensional target.
