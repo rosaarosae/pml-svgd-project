@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# We use the same settings as the SVGD experiment.
 SEED = 7
 NPARTICLES = 100
 NSTEPS = 1200

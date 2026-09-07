@@ -30,5 +30,6 @@ python experiments/compare_svgd_langevin_1d.py
 ```
 
 The scripts print their numerical diagnostics and save figures to
-`experiments/results/`. The next validation step is to add the initial
-distribution to the direct-comparison figure.
+`experiments/results/`. Together, these experiments complete the preliminary
+one-dimensional sampler validation. The next step is to define and validate the
+multimodal two-dimensional target used by the main experiment.
