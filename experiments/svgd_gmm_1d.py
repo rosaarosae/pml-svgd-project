@@ -12,7 +12,7 @@ import numpy as np
 SEED = 7
 N_PARTICLES = 100
 N_STEPS = 1200
-STEP_SIZE = 0.03
+STEP_SIZE = 0.1
 MEANS = np.array([-2.0, 2.0])
 STD = 0.55
 
