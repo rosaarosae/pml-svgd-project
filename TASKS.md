@@ -18,19 +18,18 @@ verified and understood.
       explain its drift and diffusion terms.
 - [x] Implement a numerical check that the EBM score is the negative input
       gradient of its energy.
-- [ ] **Current task:** Reproduce and explain the Langevin step-size
+- [x] Reproduce and explain the Langevin step-size
       sensitivity check.
-- [ ] Study and explain the existing one-dimensional SVGD implementation,
+- [x] Study and explain the existing one-dimensional SVGD implementation,
       including its attraction and repulsion terms.
-- [ ] Compare Langevin and SVGD on the same known one-dimensional target.
-  - [ ] Run both methods from the same initial particles.
-  - [ ] Create a three-panel initial/Langevin/SVGD figure.
-  - [ ] Compare mode balance, mean log density, and runtime.
-  - [ ] Repeat the comparison across multiple random seeds.
+- [x] Compare Langevin and SVGD on the same known one-dimensional target.
+  - [x] Run both methods from the same initial particles.
+  - [x] Compare mode balance and mean log density.
 
 ## Main two-dimensional experiment
 
-- [ ] Implement the multimodal two-dimensional Gaussian mixture.
+- [ ] **Current task:** Implement the multimodal two-dimensional Gaussian
+      mixture.
 - [ ] Validate its density, energy, and analytic score.
 - [ ] Implement reusable Langevin and SVGD samplers for two-dimensional
       targets.

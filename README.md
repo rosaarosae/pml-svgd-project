@@ -56,3 +56,22 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
+
+## Run the one-dimensional validation
+
+With the environment activated, run the complete validation from the repository
+root:
+
+```bash
+python experiments/1D/score_energy_check.py
+python experiments/1D/langevin_gmm_1d.py
+python experiments/1D/svgd_gmm_1d.py
+python experiments/1D/langevin_stepsize_1d.py
+python experiments/1D/svgd_stepsize_1d.py
+python experiments/1D/compare_svgd_langevin_1d.py
+```
+
+Each experiment is reproducible from a fixed seed. Numerical diagnostics are
+printed in the terminal and generated figures are stored in
+`experiments/1D/results/`. See [experiments/README.md](experiments/README.md)
+for the purpose of each script.
