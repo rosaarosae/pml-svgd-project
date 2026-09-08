@@ -58,7 +58,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-## Run the one-dimensional validation
+## Run the experiments
 
 With the environment activated, run the complete validation from the repository
 root:
@@ -77,3 +77,23 @@ printed in the terminal and generated figures are stored in
 `experiments/1D/results/`. See the documentation for the
 [one-dimensional experiments](experiments/1D/README.md) and the
 [two-dimensional experiments](experiments/2D/README.md).
+
+Run the current two-dimensional target and sampler validation from the
+repository root:
+
+```bash
+python experiments/2D/gmm_2d.py
+python experiments/2D/visualize_gmm_2d.py
+python experiments/2D/langevin_2d.py
+python experiments/2D/visualize_langevin_2d.py
+python experiments/2D/langevin_stepsize_2d.py
+python experiments/2D/svgd_2d.py
+python experiments/2D/visualize_svgd_2d.py
+python experiments/2D/svgd_stepsize_2d.py
+```
+
+The 2D target now provides its complete density, exact energy, analytic score,
+and direct sampler. Langevin and SVGD have both been validated on this known
+target, and their step sizes have been studied across five random seeds. The
+next experiment will compare both methods directly using shared initial
+particles and distribution-level metrics.

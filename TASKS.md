@@ -28,16 +28,17 @@ verified and understood.
 
 ## Main two-dimensional experiment
 
-- [ ] **Current task:** Implement the multimodal two-dimensional Gaussian
+- [x] Implement the multimodal two-dimensional Gaussian
       mixture.
   - [x] Define its means, equal weights, and shared isotropic covariance.
   - [x] Implement and check the individual component densities.
-  - [ ] Combine the components into the complete mixture density.
-  - [ ] Generate target samples and visualise the density in two dimensions.
-- [ ] Validate its density, energy, and analytic score.
-- [ ] Implement reusable Langevin and SVGD samplers for two-dimensional
+  - [x] Combine the components into the complete mixture density.
+  - [x] Generate target samples and visualise the density in two dimensions.
+- [x] Validate its density, energy, and analytic score.
+- [x] Implement reusable Langevin and SVGD samplers for two-dimensional
       targets.
-- [ ] Validate both samplers against the known target distribution.
+- [ ] **Current task:** Validate both samplers against the known target
+      distribution with a direct, shared-condition comparison.
 
 ## Energy-based model
 
