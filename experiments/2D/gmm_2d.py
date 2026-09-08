@@ -61,44 +61,271 @@ def component_densities(x: np.ndarray) -> np.ndarray:
 
     return densities
 
+def mixture_density(x: np.ndarray) -> np.ndarray:
+    """Compute the density of the Gaussian mixture.
+
+    Args:
+        x: Array of shape (n_points, 2).
+
+    Returns:
+        Array of shape (n_points,).
+    """
+    # Allow a single point with shape (2,) or several points with shape (N, 2).
+    x = np.atleast_2d(x)
+
+    # Compute the density of each component.
+    component_densities_array = component_densities(x)
+
+    # Compute the weighted sum of the component densities.
+    mixture_density_array = np.dot(component_densities_array, WEIGHTS)
+
+    return mixture_density_array
+
+def target_energy(x: np.ndarray) -> np.ndarray:
+    """Compute the energy of the Gaussian mixture.
+
+    Args:
+        x: Array of shape (n_points, 2).
+
+    Returns:
+        Array of shape (n_points,).
+    """
+    # Allow a single point with shape (2,) or several points with shape (N, 2).
+    x = np.atleast_2d(x)
+
+    # Compute the density of the mixture.
+    mixture_density_array = mixture_density(x)
+
+    # Compute the energy as the negative log density.
+    energy_array = -np.log(mixture_density_array + 1e-12)  # Add a small constant to avoid log(0).
+
+    return energy_array
+
+def target_score(x: np.ndarray) -> np.ndarray:
+    """Compute the score of the Gaussian mixture.
+
+    Args:
+        x: Array of shape (2,) or (n_points, 2).
+
+    Returns:
+        Array of shape (n_points, 2).
+    """
+    x = np.atleast_2d(x).astype(float)
+
+    component_density_values = component_densities(x)
+    mixture_density_values = mixture_density(x)
+
+    score_values = np.zeros_like(x, dtype=float)
+
+    for i in range(N_COMPONENTS):
+        differences = x - MEANS[i]
+
+        component_score = (
+            -differences @ INVERSE_COVARIANCE
+        )
+
+        weighted_component_score = (
+            WEIGHTS[i]
+            * component_density_values[:, i, np.newaxis]
+            * component_score
+        )
+
+        score_values += weighted_component_score
+
+    score_values /= mixture_density_values[:, np.newaxis]
+
+    return score_values
+
+def numerical_gradient(func, x, epsilon=1e-5):
+    """Compute the numerical gradient of a function at a given point.
+
+    Args:
+        x: Array of shape (2,) or (n_points, 2).
+        step: Small displacement used for the numerical approximation.
+
+    Returns:
+        Array of shape (n_points, 2).
+    """
+    x = np.atleast_2d(x).astype(float)
+    gradient = np.zeros_like(x)
+
+    for dimension in range(DIMENSION):
+        displacement = np.zeros_like(x)
+        displacement[:, dimension] = epsilon
+
+        function_plus = func(x + displacement)
+        function_minus = func(x - displacement)
+
+        gradient[:, dimension] = (
+            function_plus - function_minus
+        ) / (2.0 * epsilon)
+
+    return gradient
+
+def sample_target(n_samples: int, rng: np.random.Generator) -> np.ndarray:
+    """Draw independent samples from the target Gaussian mixture.
+
+    Args:
+        n_samples: Number of samples to generate.
+        rng: NumPy random number generator.
+
+    Returns:
+        Array of shape (n_samples, 2).
+    """
+    component_indices = rng.choice(
+        N_COMPONENTS,
+        size=n_samples,
+        p=WEIGHTS,
+    )
+
+    samples = rng.normal(
+        loc=MEANS[component_indices],
+        scale=STD,
+        size=(n_samples, DIMENSION),
+    )
+
+    return samples
+
 def main() -> None:
     test_points = np.array([
         [0.0, 0.0],
         [-2.0, -2.0],
         [2.0, 2.0],
+        [1.5, 2.0],
     ])
 
-    densities = component_densities(test_points)
+    component_values = component_densities(test_points)
+    mixture_values = mixture_density(test_points)
+    energy_values = target_energy(test_points)
+    score_values = target_score(test_points)
+
+    energy_gradient_values = numerical_gradient(target_energy, test_points)
+    negative_energy_gradient = -energy_gradient_values
+
+    rng = np.random.default_rng(SEED)
+    target_samples = sample_target(10_000, rng)
+
+    distances_to_means = np.sum(
+        (target_samples[:, np.newaxis, :] - MEANS[np.newaxis, :, :])**2,
+        axis=2,
+    )
+    nearest_components = np.argmin(distances_to_means, axis=1)
+    mode_fractions = np.bincount(
+        nearest_components,
+        minlength=N_COMPONENTS,
+    ) / len(target_samples)
 
     print("Test points:")
     print(test_points)
 
     print("\nComponent densities:")
-    print(densities)
+    print(component_values)
 
-    print("\nShape:", densities.shape)
+    print("\nMixture density:")
+    print(mixture_values)
 
-    # There are three test points and four Gaussian components.
-    assert densities.shape == (3, 4)
+    print("\nTarget energy:")
+    print(energy_values)
 
-    # All densities must be finite and non-negative.
-    assert np.all(np.isfinite(densities))
-    assert np.all(densities >= 0.0)
+    print("\nTarget score:")
+    print(score_values)
 
-    # The point (-2, -2) is the centre of component 0.
-    assert np.argmax(densities[1]) == 0
+    print("\nNumerical negative energy gradient:")
+    print(negative_energy_gradient)
 
-    # The point (2, 2) is the centre of component 3.
-    assert np.argmax(densities[2]) == 3
+    print("\nSample fraction assigned to each mode:")
+    print(mode_fractions)
 
-    # Density at the exact centre must equal the normalization constant.
+    # Check the returned shapes.
+    assert component_values.shape == (4, N_COMPONENTS)
+    assert mixture_values.shape == (4,)
+    assert energy_values.shape == (4,)
+    assert score_values.shape == (4, DIMENSION)
+    assert energy_gradient_values.shape == (4, DIMENSION)
+    assert target_samples.shape == (10_000, DIMENSION)
+
+    # All computed values must be finite.
+    assert np.all(np.isfinite(component_values))
+    assert np.all(np.isfinite(mixture_values))
+    assert np.all(np.isfinite(energy_values))
+    assert np.all(np.isfinite(score_values))
+    assert np.all(np.isfinite(energy_gradient_values))
+    assert np.all(np.isfinite(target_samples))
+
+    # Densities cannot be negative.
+    assert np.all(component_values >= 0.0)
+    assert np.all(mixture_values >= 0.0)
+
+    # The selected Gaussian centres belong to the expected components.
+    assert np.argmax(component_values[1]) == 0
+    assert np.argmax(component_values[2]) == 3
+
+    # A Gaussian reaches its maximum density at its centre.
     assert np.isclose(
-        densities[1, 0],
+        component_values[1, 0],
         NORMALIZATION_CONSTANT,
     )
 
-    print("\nAll component-density checks passed.")
+    # Symmetric mode centres have equal density and energy.
+    assert np.isclose(
+        mixture_values[1],
+        mixture_values[2],
+    )
 
+    assert np.isclose(
+        energy_values[1],
+        energy_values[2],
+    )
+
+    # The origin has lower density and higher energy than a mode centre.
+    assert mixture_values[0] < mixture_values[1]
+    assert energy_values[0] > energy_values[1]
+
+    # The score is zero at the origin because the four forces cancel.
+    assert np.allclose(
+        score_values[0],
+        [0.0, 0.0],
+        atol=1e-10,
+    )
+
+    # The score is approximately zero at the Gaussian centres.
+    assert np.allclose(
+        score_values[1],
+        [0.0, 0.0],
+        atol=1e-10,
+    )
+
+    assert np.allclose(
+        score_values[2],
+        [0.0, 0.0],
+        atol=1e-10,
+    )
+
+    # At (1.5, 2.0), the score points towards the mode at (2.0, 2.0).
+    assert np.allclose(
+        score_values[3],
+        [2.0, 0.0],
+        atol=1e-8,
+    )
+
+    # The analytic score must equal the negative energy gradient.
+    assert np.allclose(
+        score_values,
+        negative_energy_gradient,
+        atol=1e-5,
+    )
+
+    # Direct target samples should be approximately balanced across the modes.
+    assert np.allclose(
+        mode_fractions,
+        WEIGHTS,
+        atol=0.02,
+    )
+
+    print(
+        "\nAll density, target-energy, score, "
+        "score-energy relation, and sampling checks passed."
+    )
 
 if __name__ == "__main__":
     main()
