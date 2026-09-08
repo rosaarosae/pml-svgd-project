@@ -30,6 +30,10 @@ verified and understood.
 
 - [ ] **Current task:** Implement the multimodal two-dimensional Gaussian
       mixture.
+  - [x] Define its means, equal weights, and shared isotropic covariance.
+  - [x] Implement and check the individual component densities.
+  - [ ] Combine the components into the complete mixture density.
+  - [ ] Generate target samples and visualise the density in two dimensions.
 - [ ] Validate its density, energy, and analytic score.
 - [ ] Implement reusable Langevin and SVGD samplers for two-dimensional
       targets.

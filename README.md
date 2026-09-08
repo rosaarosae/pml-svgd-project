@@ -43,7 +43,8 @@ The complete course and project bibliography is available in
 
 ## Structure
 
-- `experiments/`: validation, model training, comparisons, and results.
+- `experiments/1D/`: completed preliminary sampler validation.
+- `experiments/2D/`: main target, sampler, and EBM experiments.
 - `notes/`: concise mathematical background needed to understand the project.
 - `presentation/`: LaTeX Beamer presentation.
 - `references/`: official course material, textbooks, and project papers.
@@ -73,5 +74,6 @@ python experiments/1D/compare_svgd_langevin_1d.py
 
 Each experiment is reproducible from a fixed seed. Numerical diagnostics are
 printed in the terminal and generated figures are stored in
-`experiments/1D/results/`. See [experiments/README.md](experiments/README.md)
-for the purpose of each script.
+`experiments/1D/results/`. See the documentation for the
+[one-dimensional experiments](experiments/1D/README.md) and the
+[two-dimensional experiments](experiments/2D/README.md).
