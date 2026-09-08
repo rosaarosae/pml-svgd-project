@@ -37,12 +37,13 @@ verified and understood.
 - [x] Validate its density, energy, and analytic score.
 - [x] Implement reusable Langevin and SVGD samplers for two-dimensional
       targets.
-- [ ] **Current task:** Validate both samplers against the known target
+- [x] Validate both samplers against the known target
       distribution with a direct, shared-condition comparison.
 
 ## Energy-based model
 
-- [ ] Implement the neural energy function and contrastive training objective.
+- [ ] **Current task:** Implement the neural energy function.
+- [ ] Implement the contrastive training objective.
 - [ ] Train the EBM using Langevin negative samples.
 - [ ] Train the same EBM using SVGD negative samples.
 - [ ] Add persistent particles, controlled resets, and shared regularisation.

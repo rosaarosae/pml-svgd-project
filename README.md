@@ -90,10 +90,14 @@ python experiments/2D/langevin_stepsize_2d.py
 python experiments/2D/svgd_2d.py
 python experiments/2D/visualize_svgd_2d.py
 python experiments/2D/svgd_stepsize_2d.py
+python experiments/2D/metrics_2d.py
+python experiments/2D/compare_svgd_langevin_2d.py
 ```
 
 The 2D target now provides its complete density, exact energy, analytic score,
 and direct sampler. Langevin and SVGD have both been validated on this known
-target, and their step sizes have been studied across five random seeds. The
-next experiment will compare both methods directly using shared initial
-particles and distribution-level metrics.
+target, their step sizes have been studied across five random seeds, and the
+direct comparison uses shared initial particles and distribution-level metrics.
+SVGD most accurately reproduces energy and within-mode geometry, while Langevin
+better reproduces global mixture weights and is substantially faster. The next
+task is to implement the neural energy function.
