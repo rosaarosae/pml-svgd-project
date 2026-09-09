@@ -1,54 +1,93 @@
-# Training Energy-Based Models with SVGD
+# Training a One-Dimensional Energy-Based Model with SVGD
 
-This project studies how the choice of sampler affects the training of a
-multimodal **energy-based model (EBM)**. We compare Stein Variational Gradient
-Descent (SVGD) with Langevin dynamics when generating the negative samples used
-in contrastive training.
+This project studies Stein Variational Gradient Descent (SVGD) as a sampler for
+training a neural energy-based model (EBM). The main experiment uses the
+one-dimensional unequal Gaussian mixture from Liu and Wang (2016), for which
+the exact density and moments are known. This makes it possible to evaluate the
+learned EBM quantitatively rather than relying only on sample visualizations.
+
+The project has two main stages:
+
+1. reproduce the published 1D SVGD toy experiment and validate the sampler;
+2. train the same neural EBM twice, using either SVGD or Langevin dynamics to
+   generate the negative samples.
+
+The existing 2D work is retained as an optional sampler study and possible
+future extension. It is not the main EBM experiment and is not a reproduction
+of a published 2D experiment.
 
 ## Research question
 
-Can the repulsive interaction between SVGD particles improve mode coverage and
-the learned density of a two-dimensional EBM compared with Langevin dynamics
-under a comparable computational budget?
+When training the same neural EBM on a known bimodal 1D distribution, how does
+the choice between SVGD and Langevin negative samples affect the learned
+density, mode proportions, stability, and computational cost?
 
-## Objectives
+## Experimental design
 
-- Implement modern, reusable SVGD and Langevin samplers.
-- Validate both samplers on a known Gaussian mixture target.
-- Train the same neural EBM with contrastive divergence, changing only the
-  negative-sample generator.
-- Compare density fit, mode coverage, sample quality, convergence, and runtime.
-- Study the effect of the number of particles and report results across multiple
-  random seeds.
+The data distribution is the target used in Section 5 of the original SVGD
+paper:
 
-The existing one-dimensional Gaussian mixture is an initial validation example.
-The main experiment will use a multimodal two-dimensional Gaussian mixture so
-that the true density and learned energy landscape can be evaluated directly.
+```text
+p_data(x) = (1/3) N(-2, 1) + (2/3) N(2, 1).
+```
 
-Progress is tracked in the [project checklist](TASKS.md).
+The neural model defines
+
+```text
+p_theta(x) = exp(-E_theta(x)) / Z_theta.
+```
+
+Its score is available without evaluating the partition function:
+
+```text
+grad_x log p_theta(x) = -grad_x E_theta(x).
+```
+
+Training uses positive data samples and negative samples from the current EBM.
+The primary method generates the negatives with SVGD; the required baseline
+uses Langevin dynamics. The architecture, data, optimizer, initialization,
+number of particles, training schedule, and evaluation remain fixed between
+the two runs. Only the negative sampler changes.
+
+## Scope and attribution
+
+- The 1D target, original SVGD update, RBF kernel, and published toy results
+  come from Liu and Wang (2016).
+- The use of SVGD to generate negative samples for EBM training is motivated by
+  prior work on learning energy models with Stein variational methods.
+- The small 1D neural architecture, confining term, seeds, training budget, and
+  evaluation protocol are explicit project choices, not settings reported in
+  the original 1D paper.
+- Langevin is a controlled baseline chosen for this project; it is not part of
+  Figures 1 or 2 of Liu and Wang (2016).
+- The 2D directory is a paper-inspired extension created by the project and is
+  optional.
 
 ## Main references
 
 - Q. Liu and D. Wang, “Stein Variational Gradient Descent: A General Purpose
-  Bayesian Inference Algorithm,” *Advances in Neural Information Processing
-  Systems 29*, 2016. [Paper](https://proceedings.neurips.cc/paper/2016/hash/b3ba8f1bee1238a2f37603d90b58898d-Abstract.html)
+  Bayesian Inference Algorithm,” NeurIPS 2016.
+  [Paper](https://arxiv.org/abs/1608.04471)
+- Q. Liu and D. Wang, “Learning Deep Energy Models: Contrastive Divergence vs.
+  Amortized MLE,” 2017. [Paper](https://arxiv.org/abs/1707.00797)
 - Y. Song and D. P. Kingma, “How to Train Your Energy-Based Models,” 2021.
   [Paper](https://arxiv.org/abs/2101.03288)
 - P. Jaini, L. Holdijk, and M. Welling, “Learning Equivariant Energy Based
   Models with Equivariant Stein Variational Gradient Descent,” 2021.
   [Paper](https://arxiv.org/abs/2106.07832)
 
-The complete course and project bibliography is available in
+The full bibliography and the role of each reference are documented in
 [references/README.md](references/README.md).
 
-## Structure
+## Repository structure
 
-- `experiments/1D/`: completed preliminary sampler validation.
-- `experiments/2D/`: main target, sampler, and EBM experiments.
-- `notes/`: concise mathematical background needed to understand the project.
-- `presentation/`: LaTeX Beamer presentation.
-- `references/`: official course material, textbooks, and project papers.
-- `TASKS.md`: project-wide checklist and completion criteria.
+- `experiments/1D/`: main project: paper reproduction, neural EBM, SVGD, and
+  Langevin baseline.
+- `experiments/2D/`: optional analytic sampler extension; not the main EBM.
+- `notes/`: mathematical foundations for the project.
+- `presentation/`: plan and future source files for the final Beamer slides.
+- `references/`: course material and project bibliography.
+- `TASKS.md`: current project status and completion criteria.
 
 ## Setup
 
@@ -58,46 +97,55 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-## Run the experiments
+## Run the completed 1D paper reproduction
 
-With the environment activated, run the complete validation from the repository
-root:
+From the repository root:
 
 ```bash
+python experiments/1D/gmm_1d.py
 python experiments/1D/score_energy_check.py
-python experiments/1D/langevin_gmm_1d.py
 python experiments/1D/svgd_gmm_1d.py
+python experiments/1D/svgd_expectations_1d.py
+```
+
+The generated figures and numerical table are stored in
+`experiments/1D/results/`. See
+[experiments/1D/RESULTS.md](experiments/1D/RESULTS.md) for the verified results
+and limitations.
+
+## Run the current EBM development checks
+
+The EBM training experiment is still in development. Its currently implemented
+components can be checked with:
+
+```bash
+python experiments/1D/energy_model.py
+python experiments/1D/svgd_ebm_1d.py
+python experiments/1D/train_ebm_svgd_1d.py
+```
+
+These commands currently validate the neural energy, automatic score, PyTorch
+RBF kernel, SVGD particle updates, and positive/negative sample preparation.
+They do not yet constitute a completed or evaluated EBM training run.
+
+## Supplementary sampler checks
+
+The following 1D programs are supporting analyses rather than reproductions of
+the paper's Figures 1 and 2:
+
+```bash
+python experiments/1D/langevin_gmm_1d.py
 python experiments/1D/langevin_stepsize_1d.py
 python experiments/1D/svgd_stepsize_1d.py
 python experiments/1D/compare_svgd_langevin_1d.py
 ```
 
-Each experiment is reproducible from a fixed seed. Numerical diagnostics are
-printed in the terminal and generated figures are stored in
-`experiments/1D/results/`. See the documentation for the
-[one-dimensional experiments](experiments/1D/README.md) and the
-[two-dimensional experiments](experiments/2D/README.md).
+Instructions for the optional 2D study are kept in
+[experiments/2D/README.md](experiments/2D/README.md).
 
-Run the current two-dimensional target and sampler validation from the
-repository root:
+## Current status
 
-```bash
-python experiments/2D/gmm_2d.py
-python experiments/2D/visualize_gmm_2d.py
-python experiments/2D/langevin_2d.py
-python experiments/2D/visualize_langevin_2d.py
-python experiments/2D/langevin_stepsize_2d.py
-python experiments/2D/svgd_2d.py
-python experiments/2D/visualize_svgd_2d.py
-python experiments/2D/svgd_stepsize_2d.py
-python experiments/2D/metrics_2d.py
-python experiments/2D/compare_svgd_langevin_2d.py
-```
-
-The 2D target now provides its complete density, exact energy, analytic score,
-and direct sampler. Langevin and SVGD have both been validated on this known
-target, their step sizes have been studied across five random seeds, and the
-direct comparison uses shared initial particles and distribution-level metrics.
-SVGD most accurately reproduces energy and within-mode geometry, while Langevin
-better reproduces global mixture weights and is substantially faster. The next
-task is to implement the neural energy function.
+The exact 1D paper reproduction is complete. The neural energy and the PyTorch
+SVGD sampler have basic validation checks. The next milestones are to complete
+SVGD-based EBM training, implement the otherwise identical Langevin-based
+training run, and compare both learned densities over multiple random seeds.

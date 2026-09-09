@@ -1,8 +1,9 @@
 # Mathematical Foundations
 
 This note contains the minimum theory needed to understand and defend the
-project. The central problem is to train an energy-based model while using SVGD
-to approximate the model samples required during training.
+project. The central problem is to train a one-dimensional energy-based model
+while using SVGD to approximate the model samples required during training,
+then repeat the matched training run with Langevin negative samples.
 
 ## Notation
 

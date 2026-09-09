@@ -1,8 +1,9 @@
 # References
 
 This bibliography follows the official material for the University of Trieste
-Probabilistic Machine Learning course and adds the papers required for the
-SVGD–EBM project.
+Probabilistic Machine Learning course and records the sources used for the main
+1D SVGD–EBM experiment. The references have different roles and are not all
+experiments reproduced by this repository.
 
 ## Official course material
 
@@ -31,18 +32,31 @@ score-based diffusion models (Chapter 11), and kernel methods (Chapter 12).
 - Andrew Gelman et al., *Bayesian Data Analysis*, 3rd ed., CRC Press, 2013.
   [Author's book page](https://sites.stat.columbia.edu/gelman/book/)
 
-## SVGD and energy-based models
+## Core project references
 
 - Qiang Liu and Dilin Wang, “Stein Variational Gradient Descent: A General
   Purpose Bayesian Inference Algorithm,” NeurIPS 2016.
   [Paper](https://arxiv.org/abs/1608.04471)
 - DartML, *Stein-Variational-Gradient-Descent*.
   [Reference implementation](https://github.com/DartML/Stein-Variational-Gradient-Descent)
+- Qiang Liu and Dilin Wang, “Learning Deep Energy Models: Contrastive
+  Divergence vs. Amortized MLE,” 2017.
+  [Paper](https://arxiv.org/abs/1707.00797)
 - Yang Song and Diederik P. Kingma, “How to Train Your Energy-Based Models,”
   2021. [Paper](https://arxiv.org/abs/2101.03288)
 - Priyank Jaini, Lars Holdijk, and Max Welling, “Learning Equivariant Energy
   Based Models with Equivariant Stein Variational Gradient Descent,” 2021.
   [Paper](https://arxiv.org/abs/2106.07832)
+
+The original SVGD paper and authors' code define the reproduced 1D target and
+particle method. Liu and Wang (2017) and Jaini et al. (2021) support the use of
+Stein variational updates for learning energy models. Song and Kingma provide
+general EBM training background. The repository adapts these ideas to a
+controlled non-equivariant 1D comparison; it does not reproduce the
+equivariant experiments of Jaini et al.
+
+## Additional background only
+
 - Shuangfei Zhai et al., “Deep Structured Energy Based Models for Anomaly
   Detection,” ICML 2016. [Paper](https://arxiv.org/abs/1605.07717)
 - Will Grathwohl et al., “Your Classifier is Secretly an Energy Based Model and
@@ -52,6 +66,11 @@ score-based diffusion models (Chapter 11), and kernel methods (Chapter 12).
   Tutorials. [Tutorial](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial8/Deep_Energy_Models.html)
 - Sadegh Aliakbarian, *Energy Models: Energy, Score, and Diffusion*, 2025.
   [Notes](https://sadegh-aa.github.io/projects/aliakbarian_energy_models_note_2025.pdf)
+
+These additional sources are useful context but do not define the main
+experiment. In particular, this project does not reproduce the anomaly-
+detection experiment of Zhai et al. or the classifier experiments of
+Grathwohl et al.
 
 ## Course-project requirements
 

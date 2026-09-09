@@ -1,74 +1,68 @@
 # Project Checklist
 
-This checklist tracks the complete path from the initial literature review to
-the final presentation. A task is checked only after its output has been
-verified and understood.
+The main project is one-dimensional. SVGD is the primary negative sampler,
+Langevin is the required baseline, and the existing 2D experiment is optional.
+A task is checked only after its output has been executed and understood.
 
-## Completed setup
+## 1. Theory and published reproduction
 
-- [x] Define a focused research question for the project.
-- [x] Review the core SVGD, EBM, score-matching, and course references.
-- [x] Create and organise the local and GitHub repositories.
+- [x] Explain energy, density, score, positive samples, and negative samples.
+- [x] Explain the attraction and repulsion terms in SVGD.
+- [x] Implement the exact unequal 1D Gaussian mixture from Liu and Wang (2016).
+- [x] Verify `score(x) = -d energy(x) / dx` numerically.
+- [x] Reproduce the particle transport shown in Figure 1.
+- [x] Reproduce the expectation study shown in Figure 2.
+- [x] Record the paper settings, implementation choices, results, and limits.
 
-## Foundations and sampler validation
+## 2. Supporting sampler validation
 
-- [x] Understand EBM, score, Langevin dynamics, SVGD, and contrastive negative
-      samples.
-- [x] Implement Langevin dynamics on the one-dimensional Gaussian mixture and
-      explain its drift and diffusion terms.
-- [x] Implement a numerical check that the EBM score is the negative input
-      gradient of its energy.
-- [x] Reproduce and explain the Langevin step-size
-      sensitivity check.
-- [x] Study and explain the existing one-dimensional SVGD implementation,
-      including its attraction and repulsion terms.
-- [x] Compare Langevin and SVGD on the same known one-dimensional target.
-  - [x] Run both methods from the same initial particles.
-  - [x] Compare mode balance and mean log density.
+- [x] Implement Langevin dynamics on the same known 1D target.
+- [x] Check Langevin and SVGD step-size sensitivity.
+- [x] Compare both samplers from shared initial particles.
+- [x] Keep these checks clearly labelled as supplementary, not paper results.
 
-## Main two-dimensional experiment
+## 3. Main 1D neural EBM experiment
 
-- [x] Implement the multimodal two-dimensional Gaussian
-      mixture.
-  - [x] Define its means, equal weights, and shared isotropic covariance.
-  - [x] Implement and check the individual component densities.
-  - [x] Combine the components into the complete mixture density.
-  - [x] Generate target samples and visualise the density in two dimensions.
-- [x] Validate its density, energy, and analytic score.
-- [x] Implement reusable Langevin and SVGD samplers for two-dimensional
-      targets.
-- [x] Validate both samplers against the known target
-      distribution with a direct, shared-condition comparison.
+- [x] Implement a smooth neural energy with a confining quadratic term.
+- [x] Compute the learned score with PyTorch automatic differentiation.
+- [x] Implement and check the PyTorch RBF kernel and SVGD direction.
+- [x] Implement and check repeated fixed-step SVGD particle updates.
+- [ ] Complete the alternating SVGD-based EBM training loop.
+- [ ] Add persistent particles and a controlled reset policy.
+- [ ] Add shared energy regularization if required for stable training.
+- [ ] Implement the equivalent Langevin negative sampler in PyTorch.
+- [ ] Train a second copy of the same EBM with Langevin negatives.
 
-## Energy-based model
+## 4. Controlled evaluation
 
-- [ ] **Current task:** Implement the neural energy function.
-- [ ] Implement the contrastive training objective.
-- [ ] Train the EBM using Langevin negative samples.
-- [ ] Train the same EBM using SVGD negative samples.
-- [ ] Add persistent particles, controlled resets, and shared regularisation.
+- [ ] Freeze one shared experimental configuration for both methods.
+- [ ] Run both EBM-training methods with at least five random seeds.
+- [ ] Numerically normalize each learned 1D density on a fixed grid.
+- [ ] Compare learned and exact density and energy curves.
+- [ ] Measure left/right mode mass against `1/3` and `2/3`.
+- [ ] Measure mean, second moment, test NLL, and density error or numerical KL.
+- [ ] Compare training stability, negative-sample quality, and runtime.
+- [ ] Report mean and standard deviation and discuss failed runs honestly.
 
-## Evaluation
+## 5. Optional 2D extension
 
-- [ ] Run both methods with at least five random seeds.
-- [ ] Measure mode coverage and mixture-weight error.
-- [ ] Estimate test negative log-likelihood using numerical normalisation in
-      two dimensions.
-- [ ] Measure sample quality, convergence, and runtime.
-- [ ] Study the effect of the number of particles.
-- [ ] Summarise results with uncertainty and discuss limitations.
+- [x] Implement and validate the paper-inspired 2D analytic target.
+- [x] Compare analytic-target SVGD and Langevin samplers across five seeds.
+- [ ] Include the 2D results only if presentation time permits.
+- [ ] Leave neural EBM training in 2D as future work unless the 1D study is
+      completely finished.
 
-## Final deliverables
+## 6. Final deliverables
 
-- [ ] Produce one clean and reproducible Python notebook.
-- [ ] Finalise figures, captions, environment, and reproduction instructions.
-- [ ] Prepare the ten-minute LaTeX Beamer presentation.
-- [ ] Prepare answers to likely technical questions and rehearse the
-      presentation.
+- [ ] Produce one clean and reproducible notebook or main experiment runner.
+- [ ] Finalize figures, captions, environment, and run instructions.
+- [ ] Integrate the implementation and results into the group Beamer slides.
+- [ ] Prepare answers to likely technical questions and rehearse the talk.
 
 ## Completion criteria
 
-The project is complete when the notebook reproduces the main results from a
-clean environment, the comparison changes only the negative sampler, reported
-results include uncertainty across seeds, and every team member can explain the
-method and conclusions.
+The project is complete when the same 1D neural EBM has been trained with SVGD
+and Langevin negative samples under matched conditions, the learned densities
+have been evaluated over multiple seeds against the exact target, all choices
+not taken from a paper are identified explicitly, and the results can be
+reproduced from the documented environment.

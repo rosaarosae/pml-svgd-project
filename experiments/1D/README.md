@@ -1,51 +1,43 @@
-# One-dimensional SVGD paper reproduction
+# Main one-dimensional experiments
 
-This directory reproduces the one-dimensional Gaussian-mixture experiment in
-Section 5 of Liu and Wang, *Stein Variational Gradient Descent: A General
-Purpose Bayesian Inference Algorithm* (NeurIPS 2016):
+This directory contains both the completed reproduction of the original SVGD
+toy experiment and the main neural energy-based model study.
 
-- Paper: <https://arxiv.org/abs/1608.04471>
-- Authors' reference implementation:
-  <https://github.com/DartML/Stein-Variational-Gradient-Descent>
-
-Only the one-dimensional experiment is addressed here. The `experiments/2D/`
-work is independent and is not changed by this reproduction.
-
-## Published setup
-
-The paper uses the target
+The common target is
 
 ```text
-p(x) = (1/3) N(-2, 1) + (2/3) N(2, 1)
+p_data(x) = (1/3) N(-2, 1) + (2/3) N(2, 1).
 ```
 
-and initializes the particles from
+Using the same analytic target for every stage gives the project a controlled
+progression: first validate the samplers when the exact score is known, then
+use those samplers to generate negative examples while learning an unknown
+neural energy from data samples.
+
+## Part A: reproduction of Liu and Wang (2016)
+
+Section 5 of [Liu and Wang (2016)](https://arxiv.org/abs/1608.04471)
+initializes 100 particles from
 
 ```text
-q0(x) = N(-10, 1).
+q0(x) = N(-10, 1)
 ```
 
-Figure 1 transports 100 particles for 500 iterations and displays iterations
-0, 50, 75, 100, 150 and 500. The implementation uses the paper's RBF kernel,
-adaptive median bandwidth and the AdaGrad update from the authors' released
-code.
+and transports them towards the unequal mixture. The reproduction uses the
+paper's RBF kernel and adaptive median bandwidth, together with the AdaGrad
+update in the authors' released implementation.
 
-Figure 2 compares SVGD with independent Monte Carlo samples when estimating
-`E[x]`, `E[x^2]` and `E[cos(omega*x + b)]`.
+### Reproduction files
 
-## Primary reproduction files
+- `gmm_1d.py`: exact target density, energy, score, samplers, and moments.
+- `score_energy_check.py`: numerical check of
+  `score(x) = -d energy(x) / dx`.
+- `svgd_gmm_1d.py`: reproduction of the six snapshots in Figure 1.
+- `svgd_expectations_1d.py`: reproduction of the expectation comparison in
+  Figure 2, including its CSV output.
+- `RESULTS.md`: verified configuration, results, interpretation, and limits.
 
-- `gmm_1d.py` contains the published target, initialization, density, energy,
-  score, samplers and exact moments.
-- `svgd_gmm_1d.py` implements SVGD and reproduces the six panels in Figure 1.
-- `svgd_expectations_1d.py` reproduces the expectation-error comparison in
-  Figure 2 and saves both a figure and a CSV table.
-- `score_energy_check.py` numerically checks the identity
-  `score(x) = -d energy(x)/dx`.
-- `RESULTS.md` records the settings, numerical results, interpretation and
-  reproduction limitations.
-
-Run the primary reproduction from the repository root:
+Run this completed stage from the repository root:
 
 ```bash
 python experiments/1D/gmm_1d.py
@@ -58,25 +50,70 @@ The generated artifacts are:
 
 - `results/svgd_gmm_1d.png` for Figure 1;
 - `results/svgd_expectations_1d.png` for Figure 2;
-- `results/svgd_expectations_1d.csv` for the Figure 2 numerical values.
+- `results/svgd_expectations_1d.csv` for the Figure 2 values.
 
-## Supplementary files
+## Part B: main neural EBM experiment
 
-The following scripts are useful additional checks, but they are **not**
-presented as reproductions of Figures 1 or 2:
+The model learns a scalar energy `E_theta(x)` from samples of the mixture and
+defines
 
-- `langevin_gmm_1d.py`: Langevin baseline on the same target and initialization;
-- `compare_svgd_langevin_1d.py`: direct SVGD-Langevin comparison;
-- `svgd_stepsize_1d.py`: SVGD step-size sensitivity;
-- `langevin_stepsize_1d.py`: Langevin step-size sensitivity.
+```text
+p_theta(x) = exp(-E_theta(x)) / Z_theta.
+```
 
-## Main conclusion
+The score supplied to both negative samplers is
 
-Starting from a distribution with almost no overlap with the target, the SVGD
-particles reach both modes and recover their unequal masses. With 100 particles,
-the final left/right split is `0.330 / 0.670`, compared with the exact
-`1/3 / 2/3`, while the estimated first two moments are close to their analytic
-values. The expectation experiment also reproduces the paper's qualitative
-finding: the deterministic, interacting SVGD particles estimate all three test
-expectations more accurately than the same number of independent Monte Carlo
-samples in this experiment.
+```text
+score_theta(x) = -grad_x E_theta(x).
+```
+
+The training gradient contains a positive phase from real data and a negative
+phase from the current model. The main run generates the negative particles
+with SVGD. The required baseline trains a new copy of the identical EBM using
+Langevin dynamics instead. Only the negative sampler may change in the final
+comparison.
+
+### Current EBM files
+
+- `energy_model.py`: smooth neural energy, confining term, automatic score, and
+  basic checks.
+- `svgd_ebm_1d.py`: PyTorch RBF kernel, adaptive bandwidth, SVGD direction, and
+  repeated particle updates.
+- `train_ebm_svgd_1d.py`: work in progress for positive samples, persistent
+  negative particles, and alternating model updates.
+
+Current development checks:
+
+```bash
+python experiments/1D/energy_model.py
+python experiments/1D/svgd_ebm_1d.py
+python experiments/1D/train_ebm_svgd_1d.py
+```
+
+Passing these checks currently verifies the components and their tensor shapes;
+it does not yet demonstrate a successfully trained EBM.
+
+### Remaining EBM work
+
+1. complete and stabilize SVGD-based EBM training;
+2. implement the matching Langevin negative sampler and training run;
+3. normalize the learned 1D densities numerically;
+4. compare density, energy, mode weights, moments, NLL, error, and runtime;
+5. repeat the matched comparison over at least five seeds.
+
+## Supporting sampler analyses
+
+These programs use the exact target score and support the experimental design,
+but they are not reproductions of Figures 1 or 2 and are not substitutes for
+the learned-EBM comparison:
+
+- `langevin_gmm_1d.py`: Langevin on the known target;
+- `langevin_stepsize_1d.py`: Langevin step-size sensitivity;
+- `svgd_stepsize_1d.py`: supplementary SVGD step-size sensitivity;
+- `compare_svgd_langevin_1d.py`: direct known-target sampler comparison.
+
+## Scope of the 2D work
+
+The sibling `experiments/2D/` directory is an optional analytic sampler
+extension. It is not the main neural EBM experiment and should be included in
+the final presentation only if the 1D comparison is complete and time permits.
