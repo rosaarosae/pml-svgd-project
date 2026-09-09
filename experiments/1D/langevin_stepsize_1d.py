@@ -1,4 +1,4 @@
-"""We compare the effect of different step sizes on the Langevin dynamics in 1D."""
+"""Supplementary Langevin step-size check on the paper's 1D target."""
 
 from pathlib import Path
 
@@ -6,20 +6,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from langevin_gmm_1d import NPARTICLES, SEED, density, langevin
+from gmm_1d import sample_initial_particles
 
 #we put different values of the step size in a list
-step_sizes = [0.003, 0.01, 0.03, 0.1,0.3, 1.0]
+step_sizes = [0.003, 0.01, 0.03, 0.1, 0.3, 1.0]
 
 def main() -> None:
-    #we create one initial particle set for all the step sizes
+    # Use the paper's difficult q0(x) = N(-10, 1) initialization for every
+    # step size so that only the Langevin step size changes.
     initial_rng = np.random.default_rng(SEED)
-    # A scale of 3.0 spreads the initial particles widely around zero,
-    # allowing Langevin to demonstrate whether it can find both target modes.
-    initial_particles = initial_rng.normal(
-        loc=0.0,
-        scale=3.0,
-        size=NPARTICLES,
-    )
+    initial_particles = sample_initial_particles(NPARTICLES, initial_rng)
 
     #we store the final particles for each step size
     results = {}
@@ -33,7 +29,7 @@ def main() -> None:
                 step_size,
             )
         results[step_size] = final_particles
-                # Measure the result only when the sampler remains stable.
+        # Measure the result only when the sampler remains stable.
         if np.all(np.isfinite(final_particles)):
             mean_log_density = np.log(
                 density(final_particles) + 1e-12
@@ -52,7 +48,7 @@ def main() -> None:
     #we plot the results
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
     axes = axes.flatten()
-    x = np.linspace(-5, 5, 1000)
+    x = np.linspace(-15, 8, 1000)
     for i, step_size in enumerate(step_sizes):
         ax = axes[i]
         final_particles = results[step_size]

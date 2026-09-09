@@ -1,4 +1,9 @@
-"""We check which method works better in 1D."""
+"""Supplementary SVGD-Langevin comparison on the paper's 1D target.
+
+This comparison is not Figure 1 or Figure 2 of Liu and Wang (2016). It is kept
+separate from the faithful SVGD reproduction and uses the published target and
+initial distribution so that its baseline remains interpretable.
+"""
 
 from pathlib import Path
 
@@ -10,9 +15,11 @@ from svgd_gmm_1d import (
     N_PARTICLES,
     N_STEPS,
     STEP_SIZE as SVGD_STEP_SIZE,
+    run_svgd,
     target_density,
-    svgd_direction,
 )
+
+from gmm_1d import WEIGHTS, sample_initial_particles
 
 from langevin_gmm_1d import (
     langevin,
@@ -22,10 +29,9 @@ from langevin_gmm_1d import (
 def main() -> None:
     # we create one initial particle set for both methods
     initial_rng = np.random.default_rng(SEED)
-    initial_particles = initial_rng.normal(
-        loc=0.0,
-        scale=3.0,
-        size=N_PARTICLES,
+    initial_particles = sample_initial_particles(
+        N_PARTICLES,
+        initial_rng,
     )
 
     # we run the Langevin dynamics
@@ -39,17 +45,11 @@ def main() -> None:
         )
 
     # we run the SVGD dynamics
-    svgd_particles = initial_particles.copy()
-    accumulated_squared_gradient = np.zeros_like(svgd_particles)
-
-    for _ in range(N_STEPS):
-        direction = svgd_direction(svgd_particles)
-
-        accumulated_squared_gradient += direction**2
-
-        svgd_particles += SVGD_STEP_SIZE  * direction / (
-            1e-6 + np.sqrt(accumulated_squared_gradient)
-        )
+    svgd_particles, _ = run_svgd(
+        initial_particles,
+        n_steps=N_STEPS,
+        step_size=SVGD_STEP_SIZE,
+    )
 
     # we plot the results
     fig, axes = plt.subplots(
@@ -62,7 +62,7 @@ def main() -> None:
 
     axes[1].tick_params(labelleft=True)
 
-    x = np.linspace(-5, 5, 1000)
+    x = np.linspace(-15, 8, 1000)
 
     axes[0].plot(
         x,
@@ -125,6 +125,7 @@ def main() -> None:
     print(
         f"SVGD left fraction:        {svgd_left_fraction:.2f}"
     )
+    print(f"Target left fraction:      {WEIGHTS[0]:.2f}")
     output_dir = Path(__file__).resolve().parent / "results"
     output_dir.mkdir(parents=True, exist_ok=True)
 

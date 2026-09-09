@@ -1,4 +1,4 @@
-"""Compare different SVGD step sizes in 1D."""
+"""Supplementary step-size check on the paper's 1D target."""
 
 from pathlib import Path
 
@@ -9,41 +9,30 @@ from svgd_gmm_1d import (
     SEED,
     N_PARTICLES,
     N_STEPS,
+    run_svgd as run_svgd_paper,
     target_density,
-    svgd_direction,
 )
+from gmm_1d import sample_initial_particles
 
 
 STEP_SIZES = [0.03, 0.05, 0.07, 0.1, 0.15, 0.3]
 
 
 def run_svgd(initial_particles: np.ndarray, step_size: float) -> np.ndarray:
-    particles = initial_particles.copy()
-
-    accumulated_squared_gradient = np.zeros_like(particles)
-
-    for _ in range(N_STEPS):
-        direction = svgd_direction(particles)
-
-        accumulated_squared_gradient += direction**2
-
-        particles += step_size * direction / (
-            1e-6 + np.sqrt(accumulated_squared_gradient)
-        )
-
+    particles, _ = run_svgd_paper(
+        initial_particles,
+        n_steps=N_STEPS,
+        step_size=step_size,
+    )
     return particles
 
 
 def main() -> None:
     rng = np.random.default_rng(SEED)
 
-    initial_particles = rng.normal(
-        loc=0.0,
-        scale=3.0,
-        size=N_PARTICLES,
-    )
+    initial_particles = sample_initial_particles(N_PARTICLES, rng)
 
-    x = np.linspace(-5, 5, 1000)
+    x = np.linspace(-15, 8, 1000)
 
     fig, axes = plt.subplots(
         1,
