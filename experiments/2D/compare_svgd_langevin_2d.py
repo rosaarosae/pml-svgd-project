@@ -1,4 +1,4 @@
-"""Compare Langevin dynamics and SVGD on the known two-dimensional GMM."""
+"""Compare samplers on the paper-inspired two-dimensional GMM extension."""
 
 from csv import DictWriter
 from dataclasses import asdict
@@ -12,7 +12,10 @@ from gmm_2d import (
     DIMENSION,
     MEANS,
     SEED,
+    TRANSPORT_X_LIMITS,
+    Y_LIMITS,
     mixture_density,
+    sample_initial_particles,
     sample_target,
     target_score,
 )
@@ -66,15 +69,14 @@ def main() -> None:
     for seed in SEEDS:
         # Both algorithms receive copies of exactly the same initial particles.
         initial_rng = np.random.default_rng(seed)
-        initial_particles = initial_rng.normal(
-            loc=0.0,
-            scale=3.0,
-            size=(n_particles, DIMENSION),
+        initial_particles = sample_initial_particles(
+            n_particles,
+            initial_rng,
         )
         initial_snapshot = initial_particles.copy()
 
         # The reference is independent of the second direct target sample. Their
-        # comparison gives the finite-sample error floor for 500 exact samples.
+        # comparison gives the finite-sample error floor for 100 exact samples.
         reference_rng = np.random.default_rng(seed + 2_000)
         reference_samples = sample_target(n_particles, reference_rng)
         target_rng = np.random.default_rng(seed + 3_000)
@@ -278,7 +280,11 @@ def _save_per_seed_results(rows: list[dict], output_directory: Path) -> None:
     """Save every individual run to CSV."""
     path = output_directory / "compare_svgd_langevin_2d_per_seed.csv"
     with path.open("w", newline="", encoding="utf-8") as file:
-        writer = DictWriter(file, fieldnames=list(rows[0].keys()))
+        writer = DictWriter(
+            file,
+            fieldnames=list(rows[0].keys()),
+            lineterminator="\n",
+        )
         writer.writeheader()
         writer.writerows(rows)
 
@@ -295,7 +301,11 @@ def _save_summary_results(summaries: dict, output_directory: Path) -> None:
         rows.append(row)
 
     with path.open("w", newline="", encoding="utf-8") as file:
-        writer = DictWriter(file, fieldnames=list(rows[0].keys()))
+        writer = DictWriter(
+            file,
+            fieldnames=list(rows[0].keys()),
+            lineterminator="\n",
+        )
         writer.writeheader()
         writer.writerows(rows)
 
@@ -305,8 +315,8 @@ def _plot_representative_particles(
     output_directory: Path,
 ) -> None:
     """Plot initial, exact, Langevin, and SVGD particles for seed 7."""
-    x_values = np.linspace(-4.0, 4.0, 150)
-    y_values = np.linspace(-4.0, 4.0, 150)
+    x_values = np.linspace(*TRANSPORT_X_LIMITS, 220)
+    y_values = np.linspace(*Y_LIMITS, 150)
     x_grid, y_grid = np.meshgrid(x_values, y_values)
     grid_points = np.column_stack([x_grid.ravel(), y_grid.ravel()])
     density_grid = mixture_density(grid_points).reshape(x_grid.shape)
@@ -330,9 +340,8 @@ def _plot_representative_particles(
         axis.set_title(name)
         axis.set_xlabel("x₁")
         axis.set_ylabel("x₂")
-        axis.set_xlim(-4.0, 4.0)
-        axis.set_ylim(-4.0, 4.0)
-        axis.set_aspect("equal")
+        axis.set_xlim(*TRANSPORT_X_LIMITS)
+        axis.set_ylim(*Y_LIMITS)
 
     fig.suptitle(f"Direct sampler comparison (representative seed {SEEDS[0]})")
     fig.tight_layout()

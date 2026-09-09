@@ -1,16 +1,16 @@
-"""Langevin dynamics in two dimensions."""
+"""Supplementary Langevin baseline for the paper-inspired 2D target."""
 
 from collections.abc import Callable
 import numpy as np
 
-from gmm_2d import DIMENSION, SEED, target_score
+from gmm_2d import DIMENSION, SEED, sample_initial_particles, target_score
 
 #now we add the initial constants
-N_PARTICLES = 500
-N_STEPS = 1_000
-# The multi-seed experiment selects 0.01 as a stable compromise: it gives a
-# near-target mean energy, low mode-weight error, and avoids excessive spread.
-STEP_SIZE = 0.01
+N_PARTICLES = 100
+N_STEPS = 500
+# Langevin is not part of the paper's toy experiment. Its separate five-seed
+# check selects 0.1 for this target while particle and iteration budgets match.
+STEP_SIZE = 0.1
 
 #we define the langevin dynamics function in 2D
 def langevin_dynamics(
@@ -67,12 +67,8 @@ def main() -> None:
     # Generator used to create the initial particles.
     initial_rng = np.random.default_rng(SEED)
 
-    # Start from a broad Gaussian distribution.
-    initial_particles = initial_rng.normal(
-        loc=0.0,
-        scale=3.0,
-        size=(N_PARTICLES, DIMENSION),
-    )
+    # Use the same paper-inspired starting distribution as SVGD.
+    initial_particles = sample_initial_particles(N_PARTICLES, initial_rng)
 
     # Use a separate generator for the Langevin noise.
     noise_rng = np.random.default_rng(SEED + 1)

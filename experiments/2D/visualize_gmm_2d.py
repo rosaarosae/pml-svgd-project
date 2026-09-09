@@ -5,13 +5,19 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from gmm_2d import SEED, mixture_density, sample_target
+from gmm_2d import (
+    SEED,
+    TARGET_X_LIMITS,
+    Y_LIMITS,
+    mixture_density,
+    sample_target,
+)
 
 
 def main() -> None:
-    # First, create a grid of points in the 2D space between -4 and 4.
-    x = np.linspace(-4.0, 4.0, 100)
-    y = np.linspace(-4.0, 4.0, 100)
+    # Evaluate the paper-inspired 2D target on a regular grid.
+    x = np.linspace(*TARGET_X_LIMITS, 150)
+    y = np.linspace(*Y_LIMITS, 150)
     x_grid, y_grid = np.meshgrid(x, y)
 
     # Convert the grid into a list of points with shape (n_points, 2).
@@ -56,7 +62,7 @@ def main() -> None:
         label="Target density",
     )
 
-    axis.set_title("Two-dimensional Gaussian mixture model")
+    axis.set_title("Paper-inspired two-dimensional Gaussian mixture")
     axis.set_xlabel("x₁")
     axis.set_ylabel("x₂")
     axis.set_aspect("equal")

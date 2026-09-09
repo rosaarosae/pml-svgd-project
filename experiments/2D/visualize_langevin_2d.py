@@ -9,7 +9,10 @@ from gmm_2d import (
     DIMENSION,
     MEANS,
     SEED,
+    TRANSPORT_X_LIMITS,
+    Y_LIMITS,
     mixture_density,
+    sample_initial_particles,
     target_energy,
     target_score,
 )
@@ -36,13 +39,9 @@ def compute_mode_fractions(particles: np.ndarray) -> np.ndarray:
 
 
 def main() -> None:
-    # Use a broad initial distribution so the sampler must find the four modes.
+    # Use the direct 2D extension of the paper's q0=N(-10,1).
     initial_rng = np.random.default_rng(SEED)
-    initial_particles = initial_rng.normal(
-        loc=0.0,
-        scale=3.0,
-        size=(N_PARTICLES, DIMENSION),
-    )
+    initial_particles = sample_initial_particles(N_PARTICLES, initial_rng)
 
     # Keep the Langevin noise independent from the particle initialization.
     noise_rng = np.random.default_rng(SEED + 1)
@@ -55,8 +54,8 @@ def main() -> None:
     )
 
     # Evaluate the exact target density on a regular grid.
-    x_values = np.linspace(-4.0, 4.0, 150)
-    y_values = np.linspace(-4.0, 4.0, 150)
+    x_values = np.linspace(*TRANSPORT_X_LIMITS, 220)
+    y_values = np.linspace(*Y_LIMITS, 150)
     x_grid, y_grid = np.meshgrid(x_values, y_values)
     grid_points = np.column_stack([x_grid.ravel(), y_grid.ravel()])
     density_grid = mixture_density(grid_points).reshape(x_grid.shape)
@@ -106,13 +105,13 @@ def main() -> None:
         axis.set_title(title)
         axis.set_xlabel("x₁")
         axis.set_ylabel("x₂")
-        axis.set_xlim(-4.0, 4.0)
-        axis.set_ylim(-4.0, 4.0)
-        axis.set_aspect("equal")
+        axis.set_xlim(*TRANSPORT_X_LIMITS)
+        axis.set_ylim(*Y_LIMITS)
         axis.legend()
 
     fig.suptitle(
-        f"Langevin dynamics: step size = {STEP_SIZE}, steps = {N_STEPS}"
+        f"Supplementary Langevin baseline: step size = {STEP_SIZE}, "
+        f"steps = {N_STEPS}"
     )
     fig.tight_layout()
 

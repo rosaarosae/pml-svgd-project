@@ -1,8 +1,15 @@
-"""Multimodal two-dimensional isotropic Gaussian mixture.
+"""Paper-inspired two-dimensional Gaussian mixture.
 
-This module implements a two-dimensional isotropic Gaussian mixture model (GMM) and
-is used to validate Langevin dynamics and SVGD before training the neural energy-based
- model.The mixture has four equally weighted Gaussian components.
+Liu and Wang (2016) use the one-dimensional target
+
+    p(x1) = 1/3 N(-2, 1) + 2/3 N(2, 1)
+
+in their published SVGD toy experiment. The paper does not define a 2D version,
+so this module makes the smallest possible extension: it preserves that exact
+mixture along x1 and adds an independent x2 ~ N(0, 1). Consequently, the two
+component means are (-2, 0) and (2, 0), with identity covariance.
+
+Paper: https://arxiv.org/abs/1608.04471
 """
 
 import numpy as np
@@ -10,23 +17,34 @@ import numpy as np
 SEED = 7
 DIMENSION = 2
 
-#Each row contains the mean of a Gaussian component
-MEANS = np.array([[-2, -2], [-2, 2], [2, -2], [2, 2]])
+# Each row contains the mean of a Gaussian component. The first coordinate is
+# exactly the target from the paper; the second is the added standard normal.
+MEANS = np.array([[-2.0, 0.0], [2.0, 0.0]])
 
 N_COMPONENTS = len(MEANS)
 
-#all components have the same probability 
-WEIGHTS = np.full(N_COMPONENTS, 1.0 / N_COMPONENTS)
+# Use the unequal component probabilities from the published 1D experiment.
+WEIGHTS = np.array([1.0 / 3.0, 2.0 / 3.0])
 
 # A general Gaussian can have any valid covariance matrix.
 # Here we choose an isotropic covariance: sigma² times the identity matrix.
 # This creates circular modes with equal dispersion in both directions.
 
-STD = 0.5
+STD = 1.0
 COVARIANCE = STD**2 * np.eye(DIMENSION)
 INVERSE_COVARIANCE = np.linalg.inv(COVARIANCE)
 DETERMINANT_COVARIANCE = np.linalg.det(COVARIANCE)
 NORMALIZATION_CONSTANT = 1.0 / (2 * np.pi * np.sqrt(DETERMINANT_COVARIANCE))
+
+# Direct 2D extension of q0(x1) = N(-10, 1): x2 already follows N(0, 1).
+INITIAL_MEAN = np.array([-10.0, 0.0])
+INITIAL_STD = 1.0
+
+# Shared limits keep the 2D figures consistent. Transport plots include q0;
+# target-only plots can focus on the two modes.
+TARGET_X_LIMITS = (-6.0, 6.0)
+TRANSPORT_X_LIMITS = (-13.0, 6.0)
+Y_LIMITS = (-4.0, 4.0)
 
 #Once we have the parameters, we write the function
 
@@ -97,7 +115,8 @@ def target_energy(x: np.ndarray) -> np.ndarray:
     mixture_density_array = mixture_density(x)
 
     # Compute the energy as the negative log density.
-    energy_array = -np.log(mixture_density_array + 1e-12)  # Add a small constant to avoid log(0).
+    # The tiny constant prevents log(0) without changing ordinary tail values.
+    energy_array = -np.log(mixture_density_array + 1e-300)
 
     return energy_array
 
@@ -186,12 +205,28 @@ def sample_target(n_samples: int, rng: np.random.Generator) -> np.ndarray:
 
     return samples
 
+
+def sample_initial_particles(
+    n_particles: int,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Draw from the paper-inspired initial distribution in two dimensions."""
+    if n_particles <= 0:
+        raise ValueError("n_particles must be positive")
+
+    return rng.normal(
+        loc=INITIAL_MEAN,
+        scale=INITIAL_STD,
+        size=(n_particles, DIMENSION),
+    )
+
 def main() -> None:
     test_points = np.array([
         [0.0, 0.0],
-        [-2.0, -2.0],
-        [2.0, 2.0],
-        [1.5, 2.0],
+        [-2.0, 0.0],
+        [2.0, 0.0],
+        [1.5, 0.0],
+        [2.0, 1.0],
     ])
 
     component_values = component_densities(test_points)
@@ -237,11 +272,11 @@ def main() -> None:
     print(mode_fractions)
 
     # Check the returned shapes.
-    assert component_values.shape == (4, N_COMPONENTS)
-    assert mixture_values.shape == (4,)
-    assert energy_values.shape == (4,)
-    assert score_values.shape == (4, DIMENSION)
-    assert energy_gradient_values.shape == (4, DIMENSION)
+    assert component_values.shape == (5, N_COMPONENTS)
+    assert mixture_values.shape == (5,)
+    assert energy_values.shape == (5,)
+    assert score_values.shape == (5, DIMENSION)
+    assert energy_gradient_values.shape == (5, DIMENSION)
     assert target_samples.shape == (10_000, DIMENSION)
 
     # All computed values must be finite.
@@ -258,7 +293,7 @@ def main() -> None:
 
     # The selected Gaussian centres belong to the expected components.
     assert np.argmax(component_values[1]) == 0
-    assert np.argmax(component_values[2]) == 3
+    assert np.argmax(component_values[2]) == 1
 
     # A Gaussian reaches its maximum density at its centre.
     assert np.isclose(
@@ -266,47 +301,20 @@ def main() -> None:
         NORMALIZATION_CONSTANT,
     )
 
-    # Symmetric mode centres have equal density and energy.
-    assert np.isclose(
-        mixture_values[1],
-        mixture_values[2],
-    )
-
-    assert np.isclose(
-        energy_values[1],
-        energy_values[2],
-    )
+    # The right mode has greater density because its paper weight is 2/3.
+    assert mixture_values[2] > mixture_values[1]
+    assert energy_values[2] < energy_values[1]
 
     # The origin has lower density and higher energy than a mode centre.
     assert mixture_values[0] < mixture_values[1]
     assert energy_values[0] > energy_values[1]
 
-    # The score is zero at the origin because the four forces cancel.
-    assert np.allclose(
-        score_values[0],
-        [0.0, 0.0],
-        atol=1e-10,
-    )
+    # At (1.5, 0), the score points mainly towards the right-hand mode.
+    assert score_values[3, 0] > 0.0
+    assert np.isclose(score_values[3, 1], 0.0)
 
-    # The score is approximately zero at the Gaussian centres.
-    assert np.allclose(
-        score_values[1],
-        [0.0, 0.0],
-        atol=1e-10,
-    )
-
-    assert np.allclose(
-        score_values[2],
-        [0.0, 0.0],
-        atol=1e-10,
-    )
-
-    # At (1.5, 2.0), the score points towards the mode at (2.0, 2.0).
-    assert np.allclose(
-        score_values[3],
-        [2.0, 0.0],
-        atol=1e-8,
-    )
+    # The added coordinate is standard normal, so its score at x2=1 is -1.
+    assert np.isclose(score_values[4, 1], -1.0)
 
     # The analytic score must equal the negative energy gradient.
     assert np.allclose(

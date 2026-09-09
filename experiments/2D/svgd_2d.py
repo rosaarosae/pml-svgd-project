@@ -1,17 +1,30 @@
-"""Stein Variational Gradient Descent in two dimensions."""
+"""SVGD for the paper-inspired two-dimensional Gaussian mixture.
+
+The RBF kernel, median bandwidth and AdaGrad update follow Liu and Wang (2016)
+and their released implementation:
+https://github.com/DartML/Stein-Variational-Gradient-Descent.
+"""
 
 from collections.abc import Callable
 import numpy as np
 
-from gmm_2d import DIMENSION, MEANS, SEED, target_energy, target_score
+from gmm_2d import (
+    DIMENSION,
+    MEANS,
+    SEED,
+    sample_initial_particles,
+    target_energy,
+    target_score,
+)
 
 
-N_PARTICLES = 500
-N_STEPS = 1_000
+N_PARTICLES = 100
+N_STEPS = 500
 
-# The five-seed experiment selects 1.0: its mean target energy is almost equal
-# to the true target value, with low variability and stable particle updates.
-STEP_SIZE = 1.0
+# Match the published 1D experiment and the authors' released implementation.
+STEP_SIZE = 0.1
+ADAGRAD_DECAY = 0.9
+ADAGRAD_EPSILON = 1e-6
 
 def svgd_dynamics(
     initial_particles: np.ndarray,
@@ -46,9 +59,11 @@ def svgd_dynamics(
     if step_size <= 0.0:
         raise ValueError("step_size must be positive")
     
-    #now we calculate the distance matrix between the particles
+    # Now we calculate the distance matrix between the particles.
     n_particles = particles.shape[0]
-    for _ in range(n_steps):    
+    historical_gradient = np.zeros_like(particles)
+
+    for step in range(n_steps):
         score_values = score_function(particles)
         # Compute all squared distances through matrix multiplication. This is
         # equivalent to ||x_i - x_j||^2 but avoids a large 3D array.
@@ -61,14 +76,9 @@ def svgd_dynamics(
         squared_distances = np.maximum(squared_distances, 0.0)
 
         #now we calculate the kernel matrix using the RBF kernel
-        nonzero_squared_distances = squared_distances[
-            squared_distances > 1e-12
-        ]
-
-        if nonzero_squared_distances.size == 0:
-            median_squared_distance = 1.0
-        else:
-            median_squared_distance = np.median(nonzero_squared_distances)
+        # The authors' code takes the median over the complete distance matrix,
+        # including its diagonal zeros.
+        median_squared_distance = np.median(squared_distances)
 
         bandwidth = max(
             median_squared_distance / np.log(n_particles + 1.0),
@@ -88,20 +98,30 @@ def svgd_dynamics(
             / bandwidth
             / n_particles
         )
-        #now we update the particles using the attraction and repulsion
-        particles += step_size * (attraction + repulsion)
+        direction = attraction + repulsion
+
+        # The paper states that AdaGrad is used. This exponential accumulator
+        # follows the implementation released by Liu and Wang.
+        if step == 0:
+            historical_gradient = direction**2
+        else:
+            historical_gradient = (
+                ADAGRAD_DECAY * historical_gradient
+                + (1.0 - ADAGRAD_DECAY) * direction**2
+            )
+
+        adjusted_direction = direction / (
+            ADAGRAD_EPSILON + np.sqrt(historical_gradient)
+        )
+        particles += step_size * adjusted_direction
 
     return particles
 
 
 def main() -> None:
-    # Create the initial particles from a broad Gaussian distribution.
+    # Use the direct 2D extension of q0=N(-10,1) from the paper.
     initial_rng = np.random.default_rng(SEED)
-    initial_particles = initial_rng.normal(
-        loc=0.0,
-        scale=3.0,
-        size=(N_PARTICLES, DIMENSION),
-    )
+    initial_particles = sample_initial_particles(N_PARTICLES, initial_rng)
 
     # Run SVGD using the exact score of the Gaussian mixture.
     final_particles = svgd_dynamics(

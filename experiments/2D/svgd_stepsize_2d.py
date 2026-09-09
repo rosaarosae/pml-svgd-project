@@ -7,18 +7,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from gmm_2d import (
-    DIMENSION,
     MEANS,
     SEED,
+    TRANSPORT_X_LIMITS,
     WEIGHTS,
+    Y_LIMITS,
     mixture_density,
+    sample_initial_particles,
     target_energy,
     target_score,
 )
 from svgd_2d import N_PARTICLES, N_STEPS, svgd_dynamics
 
 
-STEP_SIZES = [0.1, 0.3, 0.5, 0.75, 1.0, 2.0]
+STEP_SIZES = [0.03, 0.05, 0.07, 0.1, 0.15, 0.3]
 SEEDS = [SEED, 17, 27, 37, 47]
 
 
@@ -43,11 +45,7 @@ def main() -> None:
     # only the initial particle set. Every step size sees the same set per seed.
     for seed_index, seed in enumerate(SEEDS):
         initial_rng = np.random.default_rng(seed)
-        initial_particles = initial_rng.normal(
-            loc=0.0,
-            scale=3.0,
-            size=(N_PARTICLES, DIMENSION),
-        )
+        initial_particles = sample_initial_particles(N_PARTICLES, initial_rng)
 
         for step_index, step_size in enumerate(STEP_SIZES):
             start_time = perf_counter()
@@ -97,8 +95,8 @@ def main() -> None:
     output_directory.mkdir(parents=True, exist_ok=True)
 
     # Figure 1 shows all step sizes for the representative seed 7.
-    x_values = np.linspace(-4.0, 4.0, 150)
-    y_values = np.linspace(-4.0, 4.0, 150)
+    x_values = np.linspace(*TRANSPORT_X_LIMITS, 220)
+    y_values = np.linspace(*Y_LIMITS, 150)
     x_grid, y_grid = np.meshgrid(x_values, y_values)
     grid_points = np.column_stack([x_grid.ravel(), y_grid.ravel()])
     density_grid = mixture_density(grid_points).reshape(x_grid.shape)
@@ -126,9 +124,8 @@ def main() -> None:
         axis.set_title(f"Step size = {step_size}")
         axis.set_xlabel("x₁")
         axis.set_ylabel("x₂")
-        axis.set_xlim(-4.0, 4.0)
-        axis.set_ylim(-4.0, 4.0)
-        axis.set_aspect("equal")
+        axis.set_xlim(*TRANSPORT_X_LIMITS)
+        axis.set_ylim(*Y_LIMITS)
 
     particle_figure.suptitle(
         f"SVGD step-size comparison (representative seed {SEEDS[0]})"

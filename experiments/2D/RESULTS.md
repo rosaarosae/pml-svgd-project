@@ -1,38 +1,43 @@
-# Two-dimensional sampler validation results
+# Results of the optional paper-inspired 2D sampler experiment
+
+## Scope
+
+Liu and Wang (2016) publish a 1D Gaussian-mixture example, not a 2D one. This
+optional experiment preserves the published mixture in the first coordinate
+and adds an independent standard-normal second coordinate. It should therefore
+be described as a controlled project extension, never as the paper's Figure 1
+or Figure 2. The main learned-EBM comparison is one-dimensional.
 
 ## Experimental design
 
-The direct validation compares Langevin dynamics and SVGD against the known
-four-component Gaussian mixture before either sampler is used to train a neural
-energy-based model.
-
-- Both methods use 500 particles and 1,000 score evaluations per particle.
+- Target: `(1/3) N((-2,0), I) + (2/3) N((2,0), I)`.
+- Initial distribution: `N((-10,0), I)`.
+- Both samplers use 100 particles and 500 score evaluations per particle.
+- Results use seeds 7, 17, 27, 37 and 47.
+- SVGD uses the paper/reference-code configuration: RBF kernel, adaptive median
+  bandwidth, AdaGrad and master step size `0.1`.
+- Langevin uses step size `0.1`, selected by its separate five-seed experiment.
 - Every paired run starts from exactly the same particles.
-- Results are repeated with seeds 7, 17, 27, 37, and 47.
-- Langevin uses step size 0.01; SVGD uses step size 1.0.
-- Step sizes were selected in separate five-seed validation experiments.
-- An independent exact GMM sample is used as the distributional reference for
-  each seed.
-- A second exact sample provides a finite-sample baseline called `Target`.
+- Independent exact GMM samples provide the distributional reference and
+  finite-sample baseline.
 
-The numerical expected target energy is 2.837690. It is obtained by integrating
-the known density and energy on a dense two-dimensional grid.
+The first-coordinate target, weights, first-coordinate initialization, particle
+count, iteration count and SVGD construction come from the paper or authors'
+code. The added standard-normal coordinate, Langevin baseline, seeds and metrics
+are explicit project choices.
 
 ## Metrics
 
 - **Mean target energy:** average exact GMM energy of the particles.
 - **Energy error:** absolute difference from the numerically integrated expected
-  target energy.
+  target energy, `3.417621`.
 - **Mode coverage:** number of modes receiving at least 1% of the particles.
-- **Mixture-weight error:** total absolute difference from the four true weights
-  of 0.25.
-- **Mode-centre error:** average distance between empirical and true mode means.
-- **Within-mode variance error:** average error from the true per-coordinate
-  variance of 0.25.
-- **Sliced Wasserstein:** projection-based distance to an independent exact
-  target sample; lower values indicate a better overall distributional match.
-- **Runtime:** wall-clock sampler time. Target sampling is shown only as a
-  statistical baseline and is not included in the runtime comparison.
+- **Mixture-weight error:** total absolute error from weights `1/3` and `2/3`.
+- **Mode-centre error:** average distance between empirical and target centres.
+- **Within-mode variance error:** error from unit per-coordinate variance.
+- **Sliced Wasserstein:** projection-based distance from an independent exact
+  target sample; lower values indicate a better global approximation.
+- **Runtime:** sampler wall-clock time on the same machine.
 
 ## Results
 
@@ -40,56 +45,47 @@ All values are mean ± sample standard deviation across five seeds.
 
 | Method | Mean energy | Energy error | Modes | Weight error |
 |---|---:|---:|---:|---:|
-| Exact target sample | 2.807 ± 0.056 | 0.053 ± 0.029 | 4.0 | 0.066 ± 0.042 |
-| Langevin | 2.841 ± 0.041 | 0.034 ± 0.017 | 4.0 | 0.077 ± 0.056 |
-| SVGD | 2.835 ± 0.005 | 0.005 ± 0.003 | 4.0 | 0.122 ± 0.050 |
+| Exact target sample | `3.457 ± 0.095` | `0.084 ± 0.047` | `2.0` | `0.077 ± 0.039` |
+| Langevin | `3.379 ± 0.047` | `0.040 ± 0.045` | `2.0` | `0.093 ± 0.071` |
+| SVGD | `3.354 ± 0.031` | `0.063 ± 0.031` | `2.0` | `0.019 ± 0.011` |
 
 | Method | Sliced-W2 | Centre error | Variance error | Runtime |
 |---|---:|---:|---:|---:|
-| Exact target sample | 0.262 ± 0.146 | 0.044 ± 0.016 | 0.021 ± 0.005 | — |
-| Langevin | 0.321 ± 0.036 | 0.051 ± 0.018 | 0.016 ± 0.004 | 0.292 ± 0.012 s |
-| SVGD | 0.370 ± 0.043 | 0.002 ± 0.001 | 0.002 ± 0.001 | 7.574 ± 0.240 s |
+| Exact target sample | `0.469 ± 0.085` | `0.180 ± 0.056` | `0.153 ± 0.039` | — |
+| Langevin | `0.392 ± 0.080` | `0.186 ± 0.099` | `0.096 ± 0.042` | `0.059 ± 0.009 s` |
+| SVGD | `0.312 ± 0.076` | `0.046 ± 0.017` | `0.103 ± 0.045` | `0.328 ± 0.047 s` |
 
-The paired result is consistent across seeds:
+The paired outcomes are:
 
-- SVGD has lower energy, centre, and within-mode variance errors in all five
-  paired runs.
-- Langevin has lower mixture-weight error and runtime in all five paired runs.
-- Langevin has lower sliced-Wasserstein distance in four of five runs.
-- Both methods cover all four modes in every run.
+- SVGD has lower mixture-weight error and sliced-Wasserstein distance in all
+  five seeds.
+- SVGD has lower mode-centre error in four of five seeds.
+- Langevin has lower energy error in four of five seeds and lower within-mode
+  variance error in three of five.
+- Both methods cover both modes in every run.
+- Langevin is faster in all five runs because its particles update independently,
+  whereas the SVGD kernel requires pairwise interactions.
 
 ## Interpretation
 
-SVGD gives an extremely regular local approximation. Its particles reproduce
-the target energy, mode centres, and within-mode variance more accurately and
-with less seed-to-seed variation than independent Langevin particles. This is
-consistent with the repulsive interaction organizing particles within each
-mode.
+The paper-inspired initialization begins far to the left of both target modes.
+SVGD successfully transports the interacting particle set across this gap and
+recovers the unequal target masses especially accurately. Its mean weight error
+is about five times smaller than Langevin's, and its lower sliced-Wasserstein
+distance indicates the better overall approximation in this experiment.
 
-The same repulsion does not correct the number of particles assigned to distant
-modes. Once separated particle groups form, an RBF kernel couples them only
-weakly. Consequently, SVGD preserves more of the global imbalance inherited
-from initialization. Langevin noise permits some boundary crossing and produces
-better mixture weights in this experiment. The global effect dominates sliced
-Wasserstein distance, so Langevin obtains the better overall distributional
-score despite its less regular local geometry.
+Mean energy alone does not determine distributional quality: particles can have
+low energy while representing the wrong proportions or being too concentrated.
+This explains why Langevin can obtain a smaller mean-energy error while SVGD is
+better on the global distributional metrics.
 
-SVGD is also substantially slower for this analytic target because its kernel
-requires pairwise particle interactions. Langevin updates particles
-independently. The comparison fixes particle count, update count, and score
-evaluations, then reports runtime rather than hiding this algorithmic cost.
-Runtime values are machine-dependent and should be interpreted as a relative
-comparison from the same run.
+The defensible conclusion is that SVGD performs better on mode proportions,
+mode centres and overall distributional distance for this paper-inspired 2D
+target, while Langevin is much faster and slightly better on some energy and
+variance diagnostics. This is evidence from a small analytic extension, not a
+universal ranking and not a result reported by Liu and Wang.
 
-These results do not establish that Langevin will train the better neural EBM.
-Negative-sample diversity and regularity can affect learning differently from
-standalone target approximation. The next stage therefore keeps the model,
-data, optimizer, initialization, and training budget fixed and changes only the
-negative sampler.
-
-## Outputs
-
-- `results/compare_svgd_langevin_2d_particles.png`: representative particles.
-- `results/compare_svgd_langevin_2d_metrics.png`: metric means and uncertainty.
-- `results/compare_svgd_langevin_2d_per_seed.csv`: every individual result.
-- `results/compare_svgd_langevin_2d_summary.csv`: aggregated results.
+These sampler results also do not establish which method trains a better neural
+EBM. The main 1D experiment addresses that separate question by keeping the
+neural model, data, optimizer, and training budget fixed while changing only
+the negative-particle sampler.
