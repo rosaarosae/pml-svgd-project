@@ -34,18 +34,19 @@ A task is checked only after its output has been executed and understood.
 - [x] Check whether shared energy regularization is currently required; the
       validated single-seed run remains finite without it. Revisit if either
       sampler becomes unstable.
-- [ ] Implement the equivalent Langevin negative sampler in PyTorch.
-- [ ] Train a second copy of the same EBM with Langevin negatives.
+- [x] Implement and validate the equivalent Langevin negative sampler in
+      PyTorch.
+- [x] Train and evaluate a second copy of the same EBM with Langevin negatives.
 
 ## 4. Controlled evaluation
 
-- [ ] Freeze one shared experimental configuration for both methods.
+- [x] Freeze the shared single-seed development configuration for both methods.
 - [ ] Run both EBM-training methods with at least five random seeds.
-- [x] Numerically normalize the single-seed SVGD density on a fixed grid.
-- [x] Compare the single-seed SVGD density with the exact density.
+- [x] Numerically normalize both single-seed learned densities on a fixed grid.
+- [x] Compare both single-seed learned densities with the exact density.
 - [ ] Compare learned and exact energy curves for both training methods.
-- [x] Measure single-seed SVGD left/right mass against the exact target mass.
-- [x] Measure single-seed SVGD integrated squared density error.
+- [x] Measure single-seed left/right mass against the exact target mass.
+- [x] Measure single-seed integrated squared density error for both methods.
 - [ ] Measure mean, second moment, test NLL, and density error or numerical KL
       for both methods across seeds.
 - [ ] Compare training stability, negative-sample quality, and runtime.

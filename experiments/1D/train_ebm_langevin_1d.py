@@ -1,23 +1,31 @@
-"""Train a one-dimensional neural EBM using SVGD negative samples."""
+"""Train a one-dimensional neural EBM using Langevin negative samples.
 
+This experiment trains the same neural energy model used in the SVGD
+experiment. The model architecture, training data, optimizer, number of
+epochs, batch size, and number of particles remain fixed. Only the method
+used to update the persistent negative particles changes from SVGD to
+Langevin dynamics.
+"""
+
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.optim import Adam
 
 from energy_model import DIMENSION, NeuralEnergy
 from gmm_1d import SEED, sample_target, target_density
-from svgd_ebm_1d import svgd_run
-from pathlib import Path
-import matplotlib.pyplot as plt
+from langevin_ebm_1d import langevin_run
+
 
 N_EPOCHS = 500
 BATCH_SIZE = 200
 N_PARTICLES = 200
 LEARNING_RATE = 1e-3
 
-
-SVGD_STEPS = 20
-SVGD_STEP_SIZE = 0.05
+LANGEVIN_STEPS = 20
+LANGEVIN_STEP_SIZE = 0.1
 
 
 def main() -> None:
@@ -55,91 +63,82 @@ def main() -> None:
 
     print("\nPositive-sample check passed.")
 
-    # Initialize the negative particles from real data.
-    # SVGD will move this independent copy while the positive samples
-    # remain unchanged.
+    # Initialize the persistent negative particles from real data.
     negative_particles = positive_samples.detach().clone()
 
-    particles_before_svgd = negative_particles.clone()
-
-    # Move the negative particles towards the distribution defined by the
-    # current neural energy. The model is still randomly initialized here.
-    negative_particles = svgd_run(
-        initial_particles=negative_particles,
-        n_steps=SVGD_STEPS,
-        step_size=SVGD_STEP_SIZE,
-        score_function=model.model_score,
-    )
-
-    mean_movement = torch.mean(
-        torch.abs(
-            negative_particles - particles_before_svgd
-        )
-    ).item()
-
-    assert negative_particles.shape == (N_PARTICLES, DIMENSION)
-    assert torch.all(torch.isfinite(negative_particles))
-    assert mean_movement > 0.0
-
-    print("Negative particles shape:", negative_particles.shape)
-    print(f"Mean particle movement: {mean_movement:.6f}")
-
-    # Calculate the mean energy assigned to real data.
-    positive_energy = model(
-        positive_samples
-    ).mean()
-
-    # Calculate the mean energy assigned to SVGD negative particles.
-    negative_energy = model(
-        negative_particles
-    ).mean()
-
-    print("Mean positive energy:", positive_energy.item())
-    print("Mean negative energy:", negative_energy.item())
-
-    # Alternate persistent SVGD updates with neural-energy updates.
+    # Alternate between updating the negative particles and
+    # updating the neural energy model.
     for epoch in range(N_EPOCHS):
-        # Draw a fresh batch of real examples from the target mixture.
+
+        # Draw a new batch of real samples from the target distribution.
         positive_samples_numpy = sample_target(
             BATCH_SIZE,
             rng,
         )
 
+        # Convert the real samples from NumPy to a PyTorch tensor.
         positive_samples = torch.tensor(
             positive_samples_numpy,
             dtype=torch.float32,
         ).reshape(-1, DIMENSION)
 
-        # Update the persistent negative particles using the current EBM.
-        negative_particles = svgd_run(
+        # Move the persistent negative particles using Langevin dynamics.
+        #
+        # The particles from the previous epoch are reused, so the
+        # Langevin chains remain persistent throughout training.
+        negative_particles = langevin_run(
             initial_particles=negative_particles,
-            n_steps=SVGD_STEPS,
-            step_size=SVGD_STEP_SIZE,
+            n_steps=LANGEVIN_STEPS,
+            step_size=LANGEVIN_STEP_SIZE,
             score_function=model.model_score,
         )
 
+        # Calculate the average energy assigned to real data.
         positive_energy = model(
             positive_samples
         ).mean()
 
+        # Calculate the average energy assigned to negative particles.
         negative_energy = model(
             negative_particles
         ).mean()
 
+        # Contrastive EBM loss:
+        #
+        # Minimizing this encourages the model to assign lower energy
+        # to real data and higher energy to negative samples.
         loss = positive_energy - negative_energy
 
+        # Stop immediately if the training becomes numerically unstable.
         assert torch.isfinite(loss)
-        assert torch.all(torch.isfinite(negative_particles))
+        assert torch.all(
+            torch.isfinite(negative_particles)
+        )
 
+        # Remove gradients left from the previous epoch.
         optimizer.zero_grad()
+
+        # Calculate the gradient of the loss with respect to the
+        # neural-network parameters.
         loss.backward()
+
+        # Update the parameters of the neural energy model.
         optimizer.step()
 
+        # Print diagnostics every 50 epochs.
         if epoch % 50 == 0:
-            particle_mean = negative_particles.mean().item()
-            particle_std = negative_particles.std().item()
-            particle_min = negative_particles.min().item()
-            particle_max = negative_particles.max().item()
+            particle_mean = (
+                negative_particles.mean().item()
+            )
+            particle_std = (
+                negative_particles.std().item()
+            )
+            particle_min = (
+                negative_particles.min().item()
+            )
+            particle_max = (
+                negative_particles.max().item()
+            )
 
             print(
                 f"Epoch {epoch}: "
@@ -148,8 +147,10 @@ def main() -> None:
                 f"negative_energy={negative_energy.item():.6f}, "
                 f"particle_mean={particle_mean:.3f}, "
                 f"particle_std={particle_std:.3f}, "
-                f"range=[{particle_min:.3f}, {particle_max:.3f}]"
+                f"range=[{particle_min:.3f}, "
+                f"{particle_max:.3f}]"
             )
+
     # Evaluate the learned energy on a fixed grid after training.
     grid_points = torch.linspace(
         -8.0,
@@ -172,32 +173,22 @@ def main() -> None:
         "to",
         grid_energies.max().item(),
     )
-    # Convert the grid from shape (1000, 1) to shape (1000,).
+
     grid_values = grid_points.squeeze(-1)
 
-    # Subtracting a constant does not change the final normalized
-    # density. It only prevents exponentials from becoming too large.
+    # Shift the energies to prevent numerical overflow in the exponential.
     minimum_energy = grid_energies.min()
     shifted_energies = grid_energies - minimum_energy
+    unnormalized_density = torch.exp(-shifted_energies)
 
-    # Convert energy into an unnormalized density: exp(-energy(x)).
-    unnormalized_density = torch.exp(
-        -shifted_energies
-    )
-
-    # Approximate the normalization constant over the grid.
     normalization_constant = torch.trapezoid(
         y=unnormalized_density,
         x=grid_values,
     )
-
-    # Normalize the learned density.
     learned_density = (
         unnormalized_density
         / normalization_constant
     )
-
-    # Check that the normalized density integrates to one.
     density_integral = torch.trapezoid(
         y=learned_density,
         x=grid_values,
@@ -210,7 +201,6 @@ def main() -> None:
         atol=1e-4,
     )
 
-
     print(
         "Normalization constant:",
         normalization_constant.item(),
@@ -219,27 +209,24 @@ def main() -> None:
         "Learned-density integral:",
         density_integral.item(),
     )
-    # Convert the results to NumPy for plotting.
+
     grid_numpy = grid_values.numpy()
     learned_density_numpy = learned_density.numpy()
     negative_particles_numpy = (
         negative_particles.squeeze(-1).numpy()
     )
 
-    # Evaluate the exact target density on the same grid.
     exact_density = target_density(grid_numpy)
     exact_density_tensor = torch.as_tensor(
         exact_density,
         dtype=learned_density.dtype,
     )
 
-    # Measure the integrated squared error between both densities.
     density_squared_error = torch.trapezoid(
         y=(learned_density - exact_density_tensor).square(),
         x=grid_values,
     )
 
-    # Measure the probability mass on either side of zero.
     left_indicator = (grid_values < 0.0).to(learned_density.dtype)
     right_indicator = 1.0 - left_indicator
 
@@ -275,10 +262,7 @@ def main() -> None:
         exact_right_mass.item(),
     )
 
-    # Create the comparison figure.
-    figure, axis = plt.subplots(
-        figsize=(8, 5)
-    )
+    figure, axis = plt.subplots(figsize=(8, 5))
 
     axis.plot(
         grid_numpy,
@@ -287,7 +271,6 @@ def main() -> None:
         linewidth=2,
         label="Exact target density",
     )
-
     axis.plot(
         grid_numpy,
         learned_density_numpy,
@@ -295,22 +278,22 @@ def main() -> None:
         linewidth=2,
         label="Learned EBM density",
     )
-
     axis.hist(
         negative_particles_numpy,
         bins=30,
         density=True,
         alpha=0.3,
         color="orange",
-        label="SVGD negative particles",
+        label="Langevin negative particles",
     )
 
-    axis.set_title("One-dimensional EBM trained with SVGD")
+    axis.set_title("One-dimensional EBM trained with Langevin")
     axis.set_xlabel("x")
     axis.set_ylabel("Density")
     axis.legend()
 
     figure.tight_layout()
+
     output_directory = (
         Path(__file__).resolve().parent / "results"
     )
@@ -319,8 +302,7 @@ def main() -> None:
         exist_ok=True,
     )
 
-    figure_path = output_directory / "ebm_svgd_1d.png"
-
+    figure_path = output_directory / "ebm_langevin_1d.png"
     figure.savefig(
         figure_path,
         dpi=180,

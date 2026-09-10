@@ -1,4 +1,4 @@
-"""Quick SVGD step-size comparison during one-dimensional EBM training."""
+"""Quick Langevin step-size comparison during one-dimensional EBM training."""
 
 from time import perf_counter
 from typing import TypedDict
@@ -9,15 +9,15 @@ from torch.optim import Adam
 
 from energy_model import DIMENSION, NeuralEnergy
 from gmm_1d import SEED, sample_target, target_density
-from svgd_ebm_1d import svgd_run
+from langevin_ebm_1d import langevin_run
 
 
-STEP_SIZES = [0.03, 0.05]
+STEP_SIZES = [0.1, 0.3]
 N_EPOCHS = 500
 BATCH_SIZE = 200
 N_PARTICLES = 200
 LEARNING_RATE = 1e-3
-SVGD_STEPS = 20
+LANGEVIN_STEPS = 20
 
 # The target mixture has mean 2/3 and variance 41/9.
 TARGET_MEAN = 2.0 / 3.0
@@ -43,8 +43,7 @@ class TrainingResult(TypedDict):
 def run_training(step_size: float) -> TrainingResult:
     """Train one EBM and return lightweight stability diagnostics."""
 
-    # Reset both random generators so every step size uses the same model
-    # initialization, initial particles, and sequence of positive batches.
+    # Reset the generators so every step size uses matched random inputs.
     torch.manual_seed(SEED)
     rng = np.random.default_rng(SEED)
 
@@ -66,9 +65,9 @@ def run_training(step_size: float) -> TrainingResult:
             dtype=torch.float32,
         ).reshape(-1, DIMENSION)
 
-        negative_particles = svgd_run(
+        negative_particles = langevin_run(
             initial_particles=negative_particles,
-            n_steps=SVGD_STEPS,
+            n_steps=LANGEVIN_STEPS,
             step_size=step_size,
             score_function=model.model_score,
         )
@@ -144,7 +143,7 @@ def run_training(step_size: float) -> TrainingResult:
 
 
 def main() -> None:
-    """Run and print the matched step-size comparison."""
+    """Run and print the matched Langevin step-size comparison."""
 
     print(
         f"Target particle scale: mean={TARGET_MEAN:.3f}, "
@@ -158,7 +157,7 @@ def main() -> None:
         results.append(result)
 
         print(
-            f"step_size={result['step_size']:.3f} | "
+            f"step_size={result['step_size']:.4f} | "
             f"loss={result['loss']:.6f} | "
             f"mean={result['particle_mean']:.3f} | "
             f"std={result['particle_std']:.3f} | "
@@ -179,7 +178,7 @@ def main() -> None:
         )
         print(
             "\nLowest learned-density error: "
-            f"step_size={best['step_size']:.3f}."
+            f"step_size={best['step_size']:.4f}."
         )
     else:
         print("\nNo step size completed with finite values.")

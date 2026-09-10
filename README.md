@@ -113,29 +113,34 @@ The generated figures and numerical table are stored in
 [experiments/1D/RESULTS.md](experiments/1D/RESULTS.md) for the verified results
 and limitations.
 
-## Run the current SVGD-trained EBM
+## Run the current SVGD- and Langevin-trained EBMs
 
-The SVGD training path now completes a 500-epoch single-seed run with persistent
-negative particles, numerically normalizes the learned density, reports density
-error and left/right mass, and saves a comparison figure:
+Both training paths now complete a 500-epoch single-seed run with persistent
+negative particles, numerically normalize the learned density, report density
+error and left/right mass, and save a comparison figure:
 
 ```bash
 python experiments/1D/energy_model.py
 python experiments/1D/svgd_ebm_1d.py
 python experiments/1D/svgd_ebm_stepsize_1d.py
 python experiments/1D/train_ebm_svgd_1d.py
+python experiments/1D/langevin_ebm_1d.py
+python experiments/1D/langevin_ebm_stepsize_1d.py
+python experiments/1D/train_ebm_langevin_1d.py
 ```
 
-The selected single-seed configuration uses 200 positive samples, 200 persistent
-particles, 20 SVGD steps per epoch, SVGD step size `0.005`, Adam learning rate
-`1e-3`, and 500 epochs. Its integrated squared density error is `0.01035`; its
-learned left/right mass is `0.2849 / 0.7151`, compared with the exact grid mass
-`0.3409 / 0.6591`. These are development results from one seed, not final
-multi-seed comparison statistics.
+The shared single-seed configuration uses 200 positive samples, 200 persistent
+particles, 20 sampler steps per epoch, Adam learning rate `1e-3`, and 500
+epochs. The selected sampler step sizes are `0.05` for SVGD and `0.1` for
+Langevin. SVGD obtains integrated squared density error `0.00205` and mass
+`0.318 / 0.682`; Langevin obtains error `0.00272` and mass `0.358 / 0.642`,
+compared with exact grid mass `0.3409 / 0.6591`. These are development results
+from one seed, not final multi-seed comparison statistics.
 
-The main output is `experiments/1D/results/ebm_svgd_1d.png`. Additional files
-with learning-rate and particle-count suffixes preserve the small controlled
-checks used to select the current configuration.
+The main outputs are `experiments/1D/results/ebm_svgd_1d.png` and
+`experiments/1D/results/ebm_langevin_1d.png`. Additional files with
+configuration suffixes preserve the controlled checks used to select the
+current SVGD configuration.
 
 ## Supplementary sampler checks
 
@@ -154,7 +159,7 @@ Instructions for the optional 2D study are kept in
 
 ## Current status
 
-The exact 1D paper reproduction and the first evaluated, single-seed
-SVGD-trained neural EBM are complete. The next milestones are to implement the
-otherwise identical Langevin-based training run, freeze the matched
-configuration, and compare both learned densities over multiple random seeds.
+The exact 1D paper reproduction and the first evaluated, single-seed neural EBM
+runs with SVGD and Langevin are complete. The shared development configuration
+is frozen. The next milestone is to compare both learned densities over at
+least five random seeds and report aggregate metrics and runtime.
