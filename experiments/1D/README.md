@@ -1,152 +1,70 @@
-# Main one-dimensional experiments
+# One-dimensional experiments
 
-This directory contains both the completed reproduction of the original SVGD
-toy experiment and the main neural energy-based model study.
+This folder contains the main project and the smaller experiments that helped
+me build and check it.
 
-The common target is
+## Start here
 
-```text
-p_data(x) = (1/3) N(-2, 1) + (2/3) N(2, 1).
-```
-
-Using the same analytic target for every stage gives the project a controlled
-progression: first validate the samplers when the exact score is known, then
-use those samplers to generate negative examples while learning an unknown
-neural energy from data samples.
-
-## Part A: reproduction of Liu and Wang (2016)
-
-Section 5 of [Liu and Wang (2016)](https://arxiv.org/abs/1608.04471)
-initializes 100 particles from
+The finished experiment is:
 
 ```text
-q0(x) = N(-10, 1)
+compare_ebm_svgd_langevin_1d.py
 ```
 
-and transports them towards the unequal mixture. The reproduction uses the
-paper's RBF kernel and adaptive median bandwidth, together with the AdaGrad
-update in the authors' released implementation.
+It trains the same neural energy-based model with two different negative
+samplers, SVGD and Langevin, over 10 paired random seeds. It then compares the
+learned densities, test negative log-likelihood, moments, particle statistics,
+stability, and runtime.
 
-### Reproduction files
-
-- `gmm_1d.py`: exact target density, energy, score, samplers, and moments.
-- `score_energy_check.py`: numerical check of
-  `score(x) = -d energy(x) / dx`.
-- `svgd_gmm_1d.py`: reproduction of the six snapshots in Figure 1.
-- `svgd_expectations_1d.py`: reproduction of the expectation comparison in
-  Figure 2, including its CSV output.
-- `RESULTS.md`: verified configuration, results, interpretation, and limits.
-
-Run this completed stage from the repository root:
+Run it from this folder with:
 
 ```bash
-python experiments/1D/gmm_1d.py
-python experiments/1D/score_energy_check.py
-python experiments/1D/svgd_gmm_1d.py
-python experiments/1D/svgd_expectations_1d.py
+python compare_ebm_svgd_langevin_1d.py
 ```
 
-The generated artifacts are:
-
-- `results/svgd_gmm_1d.png` for Figure 1;
-- `results/svgd_expectations_1d.png` for Figure 2;
-- `results/svgd_expectations_1d.csv` for the Figure 2 values.
-
-## Part B: main neural EBM experiment
-
-The model learns a scalar energy `E_theta(x)` from samples of the mixture and
-defines
-
-```text
-p_theta(x) = exp(-E_theta(x)) / Z_theta.
-```
-
-The score supplied to both negative samplers is
-
-```text
-score_theta(x) = -grad_x E_theta(x).
-```
-
-The training gradient contains a positive phase from real data and a negative
-phase from the current model. The main run generates the negative particles
-with SVGD. The required baseline trains a new copy of the identical EBM using
-Langevin dynamics instead. Only the negative sampler may change in the final
-comparison.
-
-### Current EBM files
-
-- `energy_model.py`: smooth neural energy, confining term, automatic score, and
-  basic checks.
-- `svgd_ebm_1d.py`: PyTorch RBF kernel, adaptive bandwidth, SVGD direction, and
-  repeated particle updates.
-- `svgd_ebm_stepsize_1d.py`: matched quick check of SVGD step sizes during EBM
-  training.
-- `train_ebm_svgd_1d.py`: complete single-seed SVGD training run with persistent
-  particles, numerical density normalization, metrics, and visualization.
-- `langevin_ebm_1d.py`: PyTorch Langevin updates using the learned model score.
-- `langevin_ebm_stepsize_1d.py`: matched Langevin step-size check during EBM
-  training.
-- `train_ebm_langevin_1d.py`: matching single-seed Langevin training,
-  evaluation, and visualization.
-- `tune_ebm_samplers_1d.py`: supplementary multi-seed step-size development
-  experiment; it is not part of the professor submission.
-- `compare_ebm_svgd_langevin_1d.py`: final ten-seed comparison, CSV export,
-  aggregate statistics, and presentation figure.
-
-Current development checks:
+The full comparison may take about 20 minutes. To recreate the figures from
+the saved outputs without training again, use:
 
 ```bash
-python experiments/1D/energy_model.py
-python experiments/1D/svgd_ebm_1d.py
-python experiments/1D/svgd_ebm_stepsize_1d.py
-python experiments/1D/train_ebm_svgd_1d.py
-python experiments/1D/langevin_ebm_1d.py
-python experiments/1D/langevin_ebm_stepsize_1d.py
-python experiments/1D/train_ebm_langevin_1d.py
+python compare_ebm_svgd_langevin_1d.py --plot-only
 ```
 
-The final shared configuration uses 1,000 epochs, batches of 200, 500
-persistent particles, 20 sampler steps per epoch, and Adam with cosine
-learning-rate annealing from `1e-3` to `1e-4`. Both methods start from the same
-neutral `N(0, 3^2)` particles. Separate development sweeps explored multiple
-step sizes; stable values of `0.02` for SVGD and `0.05` for Langevin were then
-frozen for the final ten-seed comparison. Different numerical step sizes are
-appropriate because SVGD and Langevin updates have different scales.
+## Files used by the final comparison
 
-SVGD obtains mean integrated squared density error `0.000568` and test NLL
-`2.005433`; Langevin obtains `0.001349` and `2.012102`. SVGD is better on both
-metrics for every paired seed. Langevin is about 8.6 times faster. All 20 final
-runs are stable. The defensible conclusion is a quality-versus-speed trade-off,
-not universal superiority of either method.
+- `gmm_1d.py` defines the exact two-component Gaussian mixture.
+- `energy_model.py` defines the neural energy model and its score.
+- `svgd_ebm_1d.py` implements SVGD updates for PyTorch particles.
+- `langevin_ebm_1d.py` implements Langevin updates with drift and noise.
+- `compare_ebm_svgd_langevin_1d.py` trains, evaluates, saves, and plots both
+  methods under matched conditions.
+- `results/ebm_svgd_langevin_neutral_init_1d.csv` stores the 20 final runs.
+- `results/ebm_svgd_langevin_comparison_1d.png` compares accuracy and runtime.
+- `results/ebm_svgd_langevin_curves_1d.png` compares the exact and learned
+  density and energy curves.
 
-The final artifacts are
-`results/ebm_svgd_langevin_neutral_init_1d.csv` and
-`results/ebm_svgd_langevin_comparison_1d.png`, together with
-`results/ebm_svgd_langevin_curves_1d.png` for the across-seed density and
-normalized-energy curves. Run
-`compare_ebm_svgd_langevin_1d.py --plot-only` to regenerate the figure without
-training.
+## Final setup
 
-### Remaining EBM work
+Both methods use 1,000 epochs, batches of 200 examples, 500 persistent
+particles, 20 sampler steps per epoch, and the same learning-rate schedule. The
+SVGD step size is `0.02` and the Langevin step size is `0.05`. These values were
+chosen in development tests and frozen before the final ten-seed run.
 
-The main numerical experiment is complete. Remaining work is to integrate the
-final figure and concise interpretation into the group presentation and prepare
-answers about initialization, hyperparameter validation, computational cost,
-and the limits of the one-dimensional study.
+The final comparison found that SVGD learned the density more accurately,
+while Langevin finished about 8.6 times faster. Every run was stable.
 
-## Supporting sampler analyses
+## Development and supporting files
 
-These programs use the exact target score and support the experimental design,
-but they are not reproductions of Figures 1 or 2 and are not substitutes for
-the learned-EBM comparison:
+The other scripts are useful checks, but they are not separate final results:
 
-- `langevin_gmm_1d.py`: Langevin on the known target;
-- `langevin_stepsize_1d.py`: Langevin step-size sensitivity;
-- `svgd_stepsize_1d.py`: supplementary SVGD step-size sensitivity;
-- `compare_svgd_langevin_1d.py`: direct known-target sampler comparison.
+- `train_ebm_svgd_1d.py` and `train_ebm_langevin_1d.py` train one method at a
+  time and were used while building the final loop.
+- Files containing `stepsize` or `tune` explore sampler settings.
+- `compare_svgd_langevin_1d.py` compares the samplers directly on the known
+  target, without training a neural EBM.
+- `score_energy_check.py` checks the relationship between energy and score.
+- `svgd_gmm_1d.py` and `svgd_expectations_1d.py` are supporting checks based on
+  examples from the original SVGD work.
 
-## Scope of the 2D work
-
-The sibling `experiments/2D/` directory is an optional analytic sampler
-extension. It is not the main neural EBM experiment and should be included in
-the final presentation only if the 1D comparison is complete and time permits.
+The saved development figures remain in `results/` so the path from early
+experiments to the final design is visible. For a clean folder to send to the
+professor, use [`../../professor_submission`](../../professor_submission/).

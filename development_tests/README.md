@@ -1,39 +1,22 @@
-# Development tests and optional experiments
+# Development tests
 
-This folder documents code that supports development but is not part of the
-final professor submission. The original files remain in place so their imports
-and Git history are not broken.
+This folder is only a guide to the exploratory work in the repository. The
+tests themselves remain beside the code they exercise, so there are no copied
+or competing versions of the same program.
 
-## Single-seed EBM development tests
+These checks helped answer practical questions before the final experiment:
 
-- `experiments/1D/train_ebm_svgd_1d.py`
-- `experiments/1D/train_ebm_langevin_1d.py`
-- `experiments/1D/svgd_ebm_stepsize_1d.py`
-- `experiments/1D/langevin_ebm_stepsize_1d.py`
-- `experiments/1D/tune_ebm_samplers_1d.py`
+- Does the exact Gaussian-mixture density and score behave correctly?
+- Do SVGD and Langevin particles move and remain finite?
+- Which ranges of step sizes are stable?
+- Does each single-method EBM training loop work before combining them?
+- How do the samplers behave when the target density is already known?
 
-These scripts were used to build each training path and explore learning rates,
-particle counts, sampler steps, and sampler step sizes before the final
-multi-seed experiment. Their results must be labelled as development results.
+Most of these scripts are in `experiments/1D` and have names containing
+`stepsize`, `tune`, `check`, or `train_ebm`. They are development evidence, not
+additional headline results. The final comparison is
+`experiments/1D/compare_ebm_svgd_langevin_1d.py`.
 
-## Known-target sampler tests
-
-- `experiments/1D/langevin_gmm_1d.py`
-- `experiments/1D/langevin_stepsize_1d.py`
-- `experiments/1D/svgd_stepsize_1d.py`
-- `experiments/1D/compare_svgd_langevin_1d.py`
-
-These use the exact analytic target score. They test sampler behavior but do
-not train a neural energy-based model.
-
-## Optional extension
-
-Everything in `experiments/2D/` is an optional analytic two-dimensional
-extension. It is not part of the main neural EBM comparison and should be shown
-only if presentation time permits.
-
-## Generated exploratory files
-
-Figures whose names contain particle counts, learning rates, or sampler-step
-counts are retained as an audit trail of development choices. The final
-submission uses the explicitly named comparison figure and final CSV instead.
+The `experiments/2D` folder is a separate optional extension. It is useful as a
+further sampler check, but the project's main conclusion comes from the
+one-dimensional neural EBM experiment.

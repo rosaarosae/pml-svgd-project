@@ -1,163 +1,138 @@
-# Training a One-Dimensional Energy-Based Model with SVGD
+# Comparing SVGD and Langevin in a one-dimensional energy-based model
 
-This project studies Stein Variational Gradient Descent (SVGD) as a sampler for
-training a neural energy-based model (EBM). The main experiment uses the
-one-dimensional unequal Gaussian mixture from Liu and Wang (2016), for which
-the exact density and moments are known. This makes it possible to evaluate the
-learned EBM quantitatively rather than relying only on sample visualizations.
+This project asks a simple question:
 
-The project has two main stages:
+> What changes when the negative samples of the same neural energy-based model
+> are generated with SVGD instead of Langevin dynamics?
 
-1. reproduce the published 1D SVGD toy experiment and validate the sampler;
-2. train the same neural EBM twice, using either SVGD or Langevin dynamics to
-   generate the negative samples.
+The main experiment is deliberately one-dimensional. This makes it possible to
+see the learned distribution, calculate the true answer, and check whether the
+model has really learned what it should.
 
-The existing 2D work is retained as an optional sampler study and possible
-future extension. It is not the main EBM experiment and is not a reproduction
-of a published 2D experiment.
+## What I did
 
-## Research question
-
-When training the same neural EBM on a known bimodal 1D distribution, how does
-the choice between SVGD and Langevin negative samples affect the learned
-density, mode proportions, stability, and computational cost?
-
-## Experimental design
-
-The data distribution is the target used in Section 5 of the original SVGD
-paper:
+I used a mixture of two Gaussian distributions as the data distribution:
 
 ```text
-p_data(x) = (1/3) N(-2, 1) + (2/3) N(2, 1).
+p(x) = 1/3 N(-2, 1) + 2/3 N(2, 1)
 ```
 
-The neural model defines
+The model sees samples from this distribution and learns an energy function
+`E(x)`. Low energy should correspond to likely values of `x`, and the learned
+density is proportional to `exp(-E(x))`.
 
-```text
-p_theta(x) = exp(-E_theta(x)) / Z_theta.
-```
+Training needs two kinds of samples:
 
-Its score is available without evaluating the partition function:
+- **Positive samples:** real examples drawn from the Gaussian mixture.
+- **Negative samples:** particles produced by the current model.
 
-```text
-grad_x log p_theta(x) = -grad_x E_theta(x).
-```
+The model lowers the energy of the positive samples and raises the energy of
+the negative samples. I trained the same model twice. The only important change
+between the two versions is how the negative particles move:
 
-Training uses positive data samples and negative samples from the current EBM.
-The primary method generates the negatives with SVGD; the required baseline
-uses Langevin dynamics. The architecture, data, optimizer, initialization,
-number of particles, training schedule, and evaluation remain fixed between
-the two runs. Only the negative sampler changes.
+- **SVGD** moves all particles together. An attraction term follows the learned
+  score, while a repulsion term helps the particles remain spread out.
+- **Langevin dynamics** moves each particle using the learned score plus random
+  Gaussian noise.
 
-## Scope and attribution
+## How the comparison was kept fair
 
-- The 1D target, original SVGD update, RBF kernel, and published toy results
-  come from Liu and Wang (2016).
-- The use of SVGD to generate negative samples for EBM training is motivated by
-  prior work on learning energy models with Stein variational methods.
-- The small 1D neural architecture, confining term, seeds, training budget, and
-  evaluation protocol are explicit project choices, not settings reported in
-  the original 1D paper.
-- Langevin is a controlled baseline chosen for this project; it is not part of
-  Figures 1 or 2 of Liu and Wang (2016).
-- The 2D directory is a paper-inspired extension created by the project and is
-  optional.
+Both methods use the same:
 
-## Main references
+- neural-network architecture;
+- target distribution and positive batches;
+- starting particle distribution;
+- 10 random seeds;
+- 1,000 training epochs;
+- batch size of 200;
+- 500 persistent negative particles;
+- 20 particle-update steps per epoch;
+- Adam optimizer and learning-rate schedule.
 
-- Q. Liu and D. Wang, “Stein Variational Gradient Descent: A General Purpose
-  Bayesian Inference Algorithm,” NeurIPS 2016.
-  [Paper](https://arxiv.org/abs/1608.04471)
-- Q. Liu and D. Wang, “Learning Deep Energy Models: Contrastive Divergence vs.
-  Amortized MLE,” 2017. [Paper](https://arxiv.org/abs/1707.00797)
-- Y. Song and D. P. Kingma, “How to Train Your Energy-Based Models,” 2021.
-  [Paper](https://arxiv.org/abs/2101.03288)
-- P. Jaini, L. Holdijk, and M. Welling, “Learning Equivariant Energy Based
-  Models with Equivariant Stein Variational Gradient Descent,” 2021.
-  [Paper](https://arxiv.org/abs/2106.07832)
+The sampler step sizes are different: `0.02` for SVGD and `0.05` for
+Langevin. This is intentional. A step does not have the same numerical meaning
+in the two algorithms: SVGD averages kernel interactions between particles,
+whereas Langevin adds noise whose scale depends on the step size. I tried a
+range of stable settings during development, selected one sensible value for
+each method, and froze both values before the final ten-seed comparison. These
+are empirical choices for this experiment, not universal best values.
 
-The full bibliography and the role of each reference are documented in
-[references/README.md](references/README.md).
+## Main result
 
-## Repository structure
+All 10 runs of both methods finished without numerical instability.
 
-- `professor_submission/`: self-contained folder to send to the professor.
-- `experiments/1D/`: full development history and main 1D experiments.
-- `development_tests/`: index explaining which programs are tests or
-  exploratory analyses rather than final results.
-- `experiments/2D/`: optional analytic sampler extension.
-- `notes/`: mathematical foundations.
-- `presentation/`: presentation narrative and future slide sources.
-- `references/`: bibliography and attribution.
-- `TASKS.md`: current completion checklist.
+| Metric | SVGD | Langevin | Better result |
+| --- | ---: | ---: | --- |
+| Integrated squared density error | 0.000568 ± 0.000280 | 0.001349 ± 0.000582 | SVGD |
+| Test negative log-likelihood | 2.0054 ± 0.0062 | 2.0121 ± 0.0081 | SVGD |
+| Training time | 69.79 ± 5.31 s | 8.16 ± 0.91 s | Langevin |
+| Stable runs | 10/10 | 10/10 | Tie |
 
-## Setup
+Lower is better for the first three numerical metrics except stability. In
+this experiment, SVGD produced the more accurate learned density, while
+Langevin was about 8.6 times faster. This is the conclusion of this particular
+controlled experiment; it is not a claim that one method is always better.
+
+![Accuracy and runtime comparison](experiments/1D/results/ebm_svgd_langevin_comparison_1d.png)
+
+The next figure compares the true density and energy with the mean learned
+curves across the 10 seeds. The shaded areas show the variation between runs.
+
+![Learned density and energy curves](experiments/1D/results/ebm_svgd_langevin_curves_1d.png)
+
+## How to run the final experiment
+
+Install the dependencies from the project directory:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-## Run the completed 1D paper reproduction
-
-From the repository root:
+Run the complete comparison:
 
 ```bash
-python experiments/1D/gmm_1d.py
-python experiments/1D/score_energy_check.py
-python experiments/1D/svgd_gmm_1d.py
-python experiments/1D/svgd_expectations_1d.py
+cd experiments/1D
+python compare_ebm_svgd_langevin_1d.py
 ```
 
-The generated figures and numerical table are stored in
-`experiments/1D/results/`. See
-[experiments/1D/RESULTS.md](experiments/1D/RESULTS.md) for the verified results
-and limitations.
+This trains 20 models: two methods for each of the 10 seeds. On the machine
+used for the project, the complete run takes roughly 20 minutes. Two figures
+appear one after the other, so close the first window to see the second.
 
-## Run the final neural EBM comparison
-
-The final experiment initializes both negative samplers from the same neutral
-normal distribution and uses algorithm-specific step sizes frozen after the
-development sweeps. It compares SVGD and Langevin on ten paired seeds:
+To recreate the figures from the saved results without training again:
 
 ```bash
-python experiments/1D/compare_ebm_svgd_langevin_1d.py
+cd experiments/1D
+python compare_ebm_svgd_langevin_1d.py --plot-only
 ```
 
-The fixed final configuration uses 1,000 epochs, batches of 200, 500 persistent
-particles, 20 sampler steps per epoch, and Adam with cosine learning-rate
-annealing from `1e-3` to `1e-4`. Development sweeps selected stable step sizes
-of `0.02` for SVGD and `0.05` for Langevin before the final comparison.
+## Where everything is
 
-To regenerate the final figure from the saved CSV without retraining:
+- [`professor_submission`](professor_submission/) is the self-contained folder
+  prepared for submission.
+- [`experiments/1D`](experiments/1D/) contains the final experiment and the
+  smaller checks used while developing it.
+- [`development_tests`](development_tests/) explains which files were only
+  exploratory tests.
+- [`presentation`](presentation/) contains a short suggested presentation
+  order.
+- [`experiments/2D`](experiments/2D/) is an optional extension and is not part
+  of the main conclusion.
+- [`TASKS.md`](TASKS.md) records what has been completed and what remains for
+  the presentation.
 
-```bash
-python experiments/1D/compare_ebm_svgd_langevin_1d.py --plot-only
-```
+If someone only wants to understand or reproduce the finished work, the best
+place to start is [`professor_submission/README.md`](professor_submission/README.md).
 
-The complete submission instructions and final interpretation are in
-`professor_submission/README.md` and `professor_submission/RESULTS.md`.
+## Limits of the result
 
-## Supplementary sampler checks
+This is a small controlled study with one one-dimensional target and one neural
+architecture. The exact density can be evaluated only because the example is
+one-dimensional. A larger study would test more targets, model sizes, particle
+counts, and computational budgets.
 
-The following 1D programs are supporting analyses rather than reproductions of
-the paper's Figures 1 and 2:
+## Background references
 
-```bash
-python experiments/1D/langevin_gmm_1d.py
-python experiments/1D/langevin_stepsize_1d.py
-python experiments/1D/svgd_stepsize_1d.py
-python experiments/1D/compare_svgd_langevin_1d.py
-```
-
-Instructions for the optional 2D study are kept in
-[experiments/2D/README.md](experiments/2D/README.md).
-
-## Current status
-
-The exact 1D paper reproduction and final ten-seed neural EBM comparison are
-complete. All 20 final runs were stable. SVGD achieves lower density error and
-test NLL on every paired seed, while Langevin is approximately 8.6 times
-faster. The final density and normalized-energy curves are also available.
-Remaining work is presentation integration and rehearsal.
+- Q. Liu and D. Wang, *Stein Variational Gradient Descent: A General Purpose
+  Bayesian Inference Algorithm* (2016).
+- Y. Song and D. P. Kingma, *How to Train Your Energy-Based Models* (2021).
