@@ -4,7 +4,7 @@ import numpy as np
 
 from gmm_1d import target_energy, target_score
 
-#now we  calculate the numerical value of the derivative
+# Calculate a numerical approximation of the energy derivative.
 def numerical_derivative(f, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
     """Compute the numerical derivative of f at x using central differences."""
     return (f(x + h) - f(x - h)) / (2 * h)

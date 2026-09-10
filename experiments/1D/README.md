@@ -88,6 +88,10 @@ comparison.
   training.
 - `train_ebm_langevin_1d.py`: matching single-seed Langevin training,
   evaluation, and visualization.
+- `tune_ebm_samplers_1d.py`: matched step-size selection using five
+  validation-only seeds.
+- `compare_ebm_svgd_langevin_1d.py`: final ten-seed comparison, CSV export,
+  aggregate statistics, and presentation figure.
 
 Current development checks:
 
@@ -101,24 +105,29 @@ python experiments/1D/langevin_ebm_stepsize_1d.py
 python experiments/1D/train_ebm_langevin_1d.py
 ```
 
-The selected development configuration uses 500 epochs, batches of 200, 200
-persistent particles, 20 SVGD steps per epoch, SVGD step size `0.05`, and Adam
-learning rate `1e-3`. The current single-seed run has integrated squared density
-error `0.00204` and learned left/right mass `0.319 / 0.681`, versus exact grid
-mass `0.3409 / 0.6591`. The matching Langevin run uses step size `0.1`, has
-density error `0.00272`, and learned mass `0.358 / 0.642`. Both learn the two
-modes; SVGD has slightly lower density error, while Langevin has slightly closer
-mode mass in this seed.
+The final shared configuration uses 500 epochs, batches of 200, 200 persistent
+particles, 20 sampler steps per epoch, and Adam learning rate `1e-3`. Both
+methods start from the same neutral `N(0, 3^2)` particles. Five validation-only
+seeds select step size `0.02` for SVGD and `0.05` for Langevin; the final
+comparison then uses ten different seeds.
 
-The main figure is saved to `results/ebm_svgd_1d.png`. Exploratory figures with
-configuration suffixes retain the learning-rate and particle-count checks.
+SVGD obtains mean integrated squared density error `0.005852` and test NLL
+`2.034728`; Langevin obtains `0.008055` and `2.057286`. Langevin is about 3.8
+times faster. All 20 final runs are stable. The defensible conclusion is a
+quality-versus-speed trade-off, not universal superiority of either method.
+
+The final artifacts are
+`results/ebm_svgd_langevin_neutral_init_1d.csv` and
+`results/ebm_svgd_langevin_comparison_1d.png`. Run
+`compare_ebm_svgd_langevin_1d.py --plot-only` to regenerate the figure without
+training.
 
 ### Remaining EBM work
 
-1. extract or reuse the common training and evaluation path for repeated runs;
-2. repeat the matched comparison over at least five seeds;
-3. compare density, energy, mode weights, moments, NLL, error, and runtime;
-4. report aggregate means, standard deviations, and any failed runs.
+The main numerical experiment is complete. Remaining work is to integrate the
+final figure and concise interpretation into the group presentation and prepare
+answers about initialization, hyperparameter validation, computational cost,
+and the limits of the one-dimensional study.
 
 ## Supporting sampler analyses
 

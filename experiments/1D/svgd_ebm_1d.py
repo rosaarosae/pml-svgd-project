@@ -6,7 +6,7 @@ import torch
 
 from energy_model import DIMENSION, NeuralEnergy
 
-#we reuse the kernel  from svgd_gmm_1d, but we adapt it to pytorch
+# Adapt the RBF kernel from svgd_gmm_1d to PyTorch tensors.
 
 def rbf_kernel(
     particles: torch.Tensor,
@@ -62,8 +62,8 @@ def svgd_direction(
 
     Returns:
         Tensor of shape (n_particles, DIMENSION) representing the SVGD direction.
-    """ 
-        
+    """
+
     if particles.ndim != 2 or particles.shape[1] != DIMENSION:
         raise ValueError(
             f"particles must have shape (n_particles, {DIMENSION})"
@@ -105,7 +105,7 @@ def svgd_direction(
 
     return direction.detach()
 
-#we create a function that moves the particles in the direction of the svgd direction
+# Repeatedly move the particles along the SVGD direction.
 def svgd_run(
     initial_particles: torch.Tensor,
     n_steps: int,
@@ -121,12 +121,12 @@ def svgd_run(
         step_size: Step size used in each update.
         score_function: Function that computes the score of the target
             distribution. It should accept a tensor of shape
-            (n_particles, DIMENSION) and return a tensor of the same shape. 
+            (n_particles, DIMENSION) and return a tensor of the same shape.
 
     Returns:
-        Final particle positions with the same shape as initial_particles.          
-    """ 
-    
+        Final particle positions with the same shape as initial_particles.
+    """
+
     particles = initial_particles.clone().detach()
 
     if particles.ndim != 2 or particles.shape[1] != DIMENSION:
@@ -219,4 +219,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -4,8 +4,11 @@ import torch
 from torch import nn
 
 DIMENSION = 1
-HIDDEN_UNITS = 32 #Number of hidden units in the neural network
-CONFINING_SCALE = 4.0 #We have chosen a confining scale of 4.0 to ensure that the energy function grows sufficiently fast outside the region of interest
+HIDDEN_UNITS = 32
+
+# Ensure that the energy grows outside the region containing the target modes.
+CONFINING_SCALE = 4.0
+
 
 class NeuralEnergy(nn.Module):
     """Neural energy function for the one-dimensional EBM experiment."""
