@@ -79,27 +79,36 @@ comparison.
   basic checks.
 - `svgd_ebm_1d.py`: PyTorch RBF kernel, adaptive bandwidth, SVGD direction, and
   repeated particle updates.
-- `train_ebm_svgd_1d.py`: work in progress for positive samples, persistent
-  negative particles, and alternating model updates.
+- `svgd_ebm_stepsize_1d.py`: matched quick check of SVGD step sizes during EBM
+  training.
+- `train_ebm_svgd_1d.py`: complete single-seed SVGD training run with persistent
+  particles, numerical density normalization, metrics, and visualization.
 
 Current development checks:
 
 ```bash
 python experiments/1D/energy_model.py
 python experiments/1D/svgd_ebm_1d.py
+python experiments/1D/svgd_ebm_stepsize_1d.py
 python experiments/1D/train_ebm_svgd_1d.py
 ```
 
-Passing these checks currently verifies the components and their tensor shapes;
-it does not yet demonstrate a successfully trained EBM.
+The selected development configuration uses 500 epochs, batches of 200, 200
+persistent particles, 20 SVGD steps per epoch, SVGD step size `0.005`, and Adam
+learning rate `1e-3`. The current single-seed run has integrated squared density
+error `0.01035` and learned left/right mass `0.2849 / 0.7151`, versus exact grid
+mass `0.3409 / 0.6591`. It learns both modes, although it underestimates the
+left-mode mass and makes the right peak too narrow.
+
+The main figure is saved to `results/ebm_svgd_1d.png`. Exploratory figures with
+configuration suffixes retain the learning-rate and particle-count checks.
 
 ### Remaining EBM work
 
-1. complete and stabilize SVGD-based EBM training;
-2. implement the matching Langevin negative sampler and training run;
-3. normalize the learned 1D densities numerically;
-4. compare density, energy, mode weights, moments, NLL, error, and runtime;
-5. repeat the matched comparison over at least five seeds.
+1. implement the matching Langevin negative sampler and training run;
+2. freeze the shared SVGD/Langevin experimental configuration;
+3. compare density, energy, mode weights, moments, NLL, error, and runtime;
+4. repeat the matched comparison over at least five seeds.
 
 ## Supporting sampler analyses
 

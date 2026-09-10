@@ -27,9 +27,13 @@ A task is checked only after its output has been executed and understood.
 - [x] Compute the learned score with PyTorch automatic differentiation.
 - [x] Implement and check the PyTorch RBF kernel and SVGD direction.
 - [x] Implement and check repeated fixed-step SVGD particle updates.
-- [ ] Complete the alternating SVGD-based EBM training loop.
-- [ ] Add persistent particles and a controlled reset policy.
-- [ ] Add shared energy regularization if required for stable training.
+- [x] Complete the alternating SVGD-based EBM training loop.
+- [x] Maintain persistent SVGD particles across model updates.
+- [x] Check whether resets are currently required; the validated single-seed
+      run covers both modes without them. Revisit this after multi-seed runs.
+- [x] Check whether shared energy regularization is currently required; the
+      validated single-seed run remains finite without it. Revisit if either
+      sampler becomes unstable.
 - [ ] Implement the equivalent Langevin negative sampler in PyTorch.
 - [ ] Train a second copy of the same EBM with Langevin negatives.
 
@@ -37,10 +41,13 @@ A task is checked only after its output has been executed and understood.
 
 - [ ] Freeze one shared experimental configuration for both methods.
 - [ ] Run both EBM-training methods with at least five random seeds.
-- [ ] Numerically normalize each learned 1D density on a fixed grid.
-- [ ] Compare learned and exact density and energy curves.
-- [ ] Measure left/right mode mass against `1/3` and `2/3`.
-- [ ] Measure mean, second moment, test NLL, and density error or numerical KL.
+- [x] Numerically normalize the single-seed SVGD density on a fixed grid.
+- [x] Compare the single-seed SVGD density with the exact density.
+- [ ] Compare learned and exact energy curves for both training methods.
+- [x] Measure single-seed SVGD left/right mass against the exact target mass.
+- [x] Measure single-seed SVGD integrated squared density error.
+- [ ] Measure mean, second moment, test NLL, and density error or numerical KL
+      for both methods across seeds.
 - [ ] Compare training stability, negative-sample quality, and runtime.
 - [ ] Report mean and standard deviation and discuss failed runs honestly.
 

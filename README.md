@@ -113,20 +113,29 @@ The generated figures and numerical table are stored in
 [experiments/1D/RESULTS.md](experiments/1D/RESULTS.md) for the verified results
 and limitations.
 
-## Run the current EBM development checks
+## Run the current SVGD-trained EBM
 
-The EBM training experiment is still in development. Its currently implemented
-components can be checked with:
+The SVGD training path now completes a 500-epoch single-seed run with persistent
+negative particles, numerically normalizes the learned density, reports density
+error and left/right mass, and saves a comparison figure:
 
 ```bash
 python experiments/1D/energy_model.py
 python experiments/1D/svgd_ebm_1d.py
+python experiments/1D/svgd_ebm_stepsize_1d.py
 python experiments/1D/train_ebm_svgd_1d.py
 ```
 
-These commands currently validate the neural energy, automatic score, PyTorch
-RBF kernel, SVGD particle updates, and positive/negative sample preparation.
-They do not yet constitute a completed or evaluated EBM training run.
+The selected single-seed configuration uses 200 positive samples, 200 persistent
+particles, 20 SVGD steps per epoch, SVGD step size `0.005`, Adam learning rate
+`1e-3`, and 500 epochs. Its integrated squared density error is `0.01035`; its
+learned left/right mass is `0.2849 / 0.7151`, compared with the exact grid mass
+`0.3409 / 0.6591`. These are development results from one seed, not final
+multi-seed comparison statistics.
+
+The main output is `experiments/1D/results/ebm_svgd_1d.png`. Additional files
+with learning-rate and particle-count suffixes preserve the small controlled
+checks used to select the current configuration.
 
 ## Supplementary sampler checks
 
@@ -145,7 +154,7 @@ Instructions for the optional 2D study are kept in
 
 ## Current status
 
-The exact 1D paper reproduction is complete. The neural energy and the PyTorch
-SVGD sampler have basic validation checks. The next milestones are to complete
-SVGD-based EBM training, implement the otherwise identical Langevin-based
-training run, and compare both learned densities over multiple random seeds.
+The exact 1D paper reproduction and the first evaluated, single-seed
+SVGD-trained neural EBM are complete. The next milestones are to implement the
+otherwise identical Langevin-based training run, freeze the matched
+configuration, and compare both learned densities over multiple random seeds.

@@ -62,7 +62,7 @@ def main() -> None:
         label="Target density",
     )
 
-    axis.set_title("Paper-inspired two-dimensional Gaussian mixture")
+    axis.set_title("Two-dimensional Gaussian mixture")
     axis.set_xlabel("x₁")
     axis.set_ylabel("x₂")
     axis.set_aspect("equal")
