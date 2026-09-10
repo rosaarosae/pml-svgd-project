@@ -17,6 +17,29 @@ I used a mixture of two Gaussian distributions as the data distribution:
 p(x) = 1/3 N(-2, 1) + 2/3 N(2, 1)
 ```
 
+This target is taken directly from the one-dimensional toy experiment in
+[Liu and Wang's original SVGD paper](https://papers.neurips.cc/paper_files/paper/2016/file/b3ba8f1bee1238a2f37603d90b58898d-Paper.pdf).
+It is a useful benchmark because it has two modes with unequal weights and its
+exact density is available.
+
+### Does the model know the exact density?
+
+No. The exact formula is **not used to train the neural EBM**. During training,
+the network receives only positive samples drawn from the mixture. SVGD and
+Langevin move their negative particles using the score of the neural model
+currently being learned; they are not given the target density or its score.
+
+The exact formula is used only after training, like an answer sheet. It lets me
+draw the black reference curve and calculate how far the learned density is
+from the truth. This does not give either sampler an advantage during learning.
+If the density were unknown, the same training procedure could still run, but
+the exact curve and integrated density error would no longer be available.
+
+Using a known target therefore makes sense for a controlled first experiment.
+Adding other targets would make the conclusion more general, but pretending
+that this known answer is unavailable would make evaluation weaker rather than
+training more realistic.
+
 The model sees samples from this distribution and learns an energy function
 `E(x)`. Low energy should correspond to likely values of `x`, and the learned
 density is proportional to `exp(-E(x))`.

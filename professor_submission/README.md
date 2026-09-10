@@ -30,9 +30,31 @@ The data come from this one-dimensional Gaussian mixture:
 p(x) = 1/3 N(-2, 1) + 2/3 N(2, 1)
 ```
 
-This target is useful because it has two modes of unequal weight and its exact
-density is known. I can therefore normalize the learned density on a grid and
-compare it directly with the correct answer.
+This is the target used in the one-dimensional toy experiment of
+[Liu and Wang (2016)](https://papers.neurips.cc/paper_files/paper/2016/file/b3ba8f1bee1238a2f37603d90b58898d-Paper.pdf).
+It is useful here because it has two modes of unequal weight and its exact
+density is known.
+
+### Known for evaluation, unknown to the model
+
+The neural EBM is **not trained with the exact density formula**. It sees only
+positive samples drawn from the mixture. Its SVGD or Langevin negative
+particles are updated with the learned model score, not with the target score.
+Therefore, knowledge of the formula does not make either training method
+artificially better.
+
+I use the exact density only after training. It provides a black reference
+curve and makes it possible to calculate the integrated squared density error,
+the exact mean, the exact second moment, and the probability mass on each side
+of zero. It acts as an answer sheet for evaluation rather than information
+given to the learner.
+
+The same EBM training procedure could be used when the real density is
+unknown, but then these exact checks would be unavailable and evaluation would
+need to rely on held-out samples or sample-based measures. For a controlled
+course experiment, the known target gives a stronger test. Testing additional
+targets would improve the generality of the conclusion; hiding the known
+formula would not improve the training or make the comparison fairer.
 
 ## What was held fixed
 
