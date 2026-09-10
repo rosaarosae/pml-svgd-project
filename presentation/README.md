@@ -19,5 +19,6 @@ The presentation narrative should follow the final project scope:
 
 No slide should claim that Langevin or the 2D extension appears in Figures 1 or
 2 of Liu and Wang (2016). The neural architecture and training protocol must be
-identified as project choices. Final slides should not report EBM conclusions
-until the matched training runs have been completed.
+identified as project choices. The completed ten-seed experiment supports a
+quality-versus-speed conclusion: SVGD has lower density error and test NLL on
+every paired seed, while Langevin is approximately 8.6 times faster.

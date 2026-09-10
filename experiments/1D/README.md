@@ -88,8 +88,8 @@ comparison.
   training.
 - `train_ebm_langevin_1d.py`: matching single-seed Langevin training,
   evaluation, and visualization.
-- `tune_ebm_samplers_1d.py`: matched step-size selection using five
-  validation-only seeds.
+- `tune_ebm_samplers_1d.py`: supplementary multi-seed step-size development
+  experiment; it is not part of the professor submission.
 - `compare_ebm_svgd_langevin_1d.py`: final ten-seed comparison, CSV export,
   aggregate statistics, and presentation figure.
 
@@ -105,20 +105,25 @@ python experiments/1D/langevin_ebm_stepsize_1d.py
 python experiments/1D/train_ebm_langevin_1d.py
 ```
 
-The final shared configuration uses 500 epochs, batches of 200, 200 persistent
-particles, 20 sampler steps per epoch, and Adam learning rate `1e-3`. Both
-methods start from the same neutral `N(0, 3^2)` particles. Five validation-only
-seeds select step size `0.02` for SVGD and `0.05` for Langevin; the final
-comparison then uses ten different seeds.
+The final shared configuration uses 1,000 epochs, batches of 200, 500
+persistent particles, 20 sampler steps per epoch, and Adam with cosine
+learning-rate annealing from `1e-3` to `1e-4`. Both methods start from the same
+neutral `N(0, 3^2)` particles. Separate development sweeps explored multiple
+step sizes; stable values of `0.02` for SVGD and `0.05` for Langevin were then
+frozen for the final ten-seed comparison. Different numerical step sizes are
+appropriate because SVGD and Langevin updates have different scales.
 
-SVGD obtains mean integrated squared density error `0.005852` and test NLL
-`2.034728`; Langevin obtains `0.008055` and `2.057286`. Langevin is about 3.8
-times faster. All 20 final runs are stable. The defensible conclusion is a
-quality-versus-speed trade-off, not universal superiority of either method.
+SVGD obtains mean integrated squared density error `0.000568` and test NLL
+`2.005433`; Langevin obtains `0.001349` and `2.012102`. SVGD is better on both
+metrics for every paired seed. Langevin is about 8.6 times faster. All 20 final
+runs are stable. The defensible conclusion is a quality-versus-speed trade-off,
+not universal superiority of either method.
 
 The final artifacts are
 `results/ebm_svgd_langevin_neutral_init_1d.csv` and
-`results/ebm_svgd_langevin_comparison_1d.png`. Run
+`results/ebm_svgd_langevin_comparison_1d.png`, together with
+`results/ebm_svgd_langevin_curves_1d.png` for the across-seed density and
+normalized-energy curves. Run
 `compare_ebm_svgd_langevin_1d.py --plot-only` to regenerate the figure without
 training.
 

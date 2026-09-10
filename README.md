@@ -81,13 +81,15 @@ The full bibliography and the role of each reference are documented in
 
 ## Repository structure
 
-- `experiments/1D/`: main project: paper reproduction, neural EBM, SVGD, and
-  Langevin baseline.
-- `experiments/2D/`: optional analytic sampler extension; not the main EBM.
-- `notes/`: mathematical foundations for the project.
-- `presentation/`: plan and future source files for the final Beamer slides.
-- `references/`: course material and project bibliography.
-- `TASKS.md`: current project status and completion criteria.
+- `professor_submission/`: self-contained folder to send to the professor.
+- `experiments/1D/`: full development history and main 1D experiments.
+- `development_tests/`: index explaining which programs are tests or
+  exploratory analyses rather than final results.
+- `experiments/2D/`: optional analytic sampler extension.
+- `notes/`: mathematical foundations.
+- `presentation/`: presentation narrative and future slide sources.
+- `references/`: bibliography and attribution.
+- `TASKS.md`: current completion checklist.
 
 ## Setup
 
@@ -113,34 +115,29 @@ The generated figures and numerical table are stored in
 [experiments/1D/RESULTS.md](experiments/1D/RESULTS.md) for the verified results
 and limitations.
 
-## Run the current SVGD- and Langevin-trained EBMs
+## Run the final neural EBM comparison
 
-Both training paths now complete a 500-epoch single-seed run with persistent
-negative particles, numerically normalize the learned density, report density
-error and left/right mass, and save a comparison figure:
+The final experiment initializes both negative samplers from the same neutral
+normal distribution and uses algorithm-specific step sizes frozen after the
+development sweeps. It compares SVGD and Langevin on ten paired seeds:
 
 ```bash
-python experiments/1D/energy_model.py
-python experiments/1D/svgd_ebm_1d.py
-python experiments/1D/svgd_ebm_stepsize_1d.py
-python experiments/1D/train_ebm_svgd_1d.py
-python experiments/1D/langevin_ebm_1d.py
-python experiments/1D/langevin_ebm_stepsize_1d.py
-python experiments/1D/train_ebm_langevin_1d.py
+python experiments/1D/compare_ebm_svgd_langevin_1d.py
 ```
 
-The shared single-seed configuration uses 200 positive samples, 200 persistent
-particles, 20 sampler steps per epoch, Adam learning rate `1e-3`, and 500
-epochs. The selected sampler step sizes are `0.05` for SVGD and `0.1` for
-Langevin. SVGD obtains integrated squared density error `0.00205` and mass
-`0.318 / 0.682`; Langevin obtains error `0.00272` and mass `0.358 / 0.642`,
-compared with exact grid mass `0.3409 / 0.6591`. These are development results
-from one seed, not final multi-seed comparison statistics.
+The fixed final configuration uses 1,000 epochs, batches of 200, 500 persistent
+particles, 20 sampler steps per epoch, and Adam with cosine learning-rate
+annealing from `1e-3` to `1e-4`. Development sweeps selected stable step sizes
+of `0.02` for SVGD and `0.05` for Langevin before the final comparison.
 
-The main outputs are `experiments/1D/results/ebm_svgd_1d.png` and
-`experiments/1D/results/ebm_langevin_1d.png`. Additional files with
-configuration suffixes preserve the controlled checks used to select the
-current SVGD configuration.
+To regenerate the final figure from the saved CSV without retraining:
+
+```bash
+python experiments/1D/compare_ebm_svgd_langevin_1d.py --plot-only
+```
+
+The complete submission instructions and final interpretation are in
+`professor_submission/README.md` and `professor_submission/RESULTS.md`.
 
 ## Supplementary sampler checks
 
@@ -159,7 +156,8 @@ Instructions for the optional 2D study are kept in
 
 ## Current status
 
-The exact 1D paper reproduction and the first evaluated, single-seed neural EBM
-runs with SVGD and Langevin are complete. The shared development configuration
-is frozen. The next milestone is to compare both learned densities over at
-least five random seeds and report aggregate metrics and runtime.
+The exact 1D paper reproduction and final ten-seed neural EBM comparison are
+complete. All 20 final runs were stable. SVGD achieves lower density error and
+test NLL on every paired seed, while Langevin is approximately 8.6 times
+faster. The final density and normalized-energy curves are also available.
+Remaining work is presentation integration and rehearsal.

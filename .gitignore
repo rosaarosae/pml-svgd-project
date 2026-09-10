@@ -1,3 +1,6 @@
 .venv/
 __pycache__/
 *.pyc
+
+# Obsolete local comparison generated before the final neutral initialization.
+experiments/1D/results/ebm_svgd_langevin_comparison_1d.csv

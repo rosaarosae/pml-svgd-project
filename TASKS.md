@@ -29,28 +29,28 @@ A task is checked only after its output has been executed and understood.
 - [x] Implement and check repeated fixed-step SVGD particle updates.
 - [x] Complete the alternating SVGD-based EBM training loop.
 - [x] Maintain persistent SVGD particles across model updates.
-- [x] Check whether resets are currently required; the validated single-seed
-      run covers both modes without them. Revisit this after multi-seed runs.
+- [x] Check whether resets are required; all ten final SVGD runs remain stable
+      and no particle resets are used in the final protocol.
 - [x] Check whether shared energy regularization is currently required; the
-      validated single-seed run remains finite without it. Revisit if either
-      sampler becomes unstable.
+      final ten-seed runs remain finite without it.
 - [x] Implement and validate the equivalent Langevin negative sampler in
       PyTorch.
 - [x] Train and evaluate a second copy of the same EBM with Langevin negatives.
 
 ## 4. Controlled evaluation
 
-- [x] Freeze the shared single-seed development configuration for both methods.
-- [ ] Run both EBM-training methods with at least five random seeds.
-- [x] Numerically normalize both single-seed learned densities on a fixed grid.
-- [x] Compare both single-seed learned densities with the exact density.
-- [ ] Compare learned and exact energy curves for both training methods.
-- [x] Measure single-seed left/right mass against the exact target mass.
-- [x] Measure single-seed integrated squared density error for both methods.
-- [ ] Measure mean, second moment, test NLL, and density error or numerical KL
+- [x] Freeze the shared final configuration for both methods.
+- [x] Run both EBM-training methods with ten random seeds.
+- [x] Numerically normalize every learned density on a fixed grid.
+- [x] Compare the learned densities with the exact density across seeds.
+- [x] Compare learned and exact density and normalized-energy curves for both
+      training methods across ten seeds.
+- [x] Measure left/right mass against the exact target mass across seeds.
+- [x] Measure integrated squared density error for both methods across seeds.
+- [x] Measure mean, second moment, test NLL, and density error or numerical KL
       for both methods across seeds.
-- [ ] Compare training stability, negative-sample quality, and runtime.
-- [ ] Report mean and standard deviation and discuss failed runs honestly.
+- [x] Compare training stability, negative-sample quality, and runtime.
+- [x] Report mean and standard deviation and discuss failed runs honestly.
 
 ## 5. Optional 2D extension
 
@@ -62,8 +62,8 @@ A task is checked only after its output has been executed and understood.
 
 ## 6. Final deliverables
 
-- [ ] Produce one clean and reproducible notebook or main experiment runner.
-- [ ] Finalize figures, captions, environment, and run instructions.
+- [x] Produce one clean and reproducible main experiment runner.
+- [x] Finalize figures, captions, environment, and run instructions.
 - [ ] Integrate the implementation and results into the group Beamer slides.
 - [ ] Prepare answers to likely technical questions and rehearse the talk.
 
