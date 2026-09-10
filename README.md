@@ -68,17 +68,51 @@ All 10 runs of both methods finished without numerical instability.
 | Training time | 69.79 ± 5.31 s | 8.16 ± 0.91 s | Langevin |
 | Stable runs | 10/10 | 10/10 | Tie |
 
-Lower is better for the first three numerical metrics except stability. In
-this experiment, SVGD produced the more accurate learned density, while
-Langevin was about 8.6 times faster. This is the conclusion of this particular
+Lower is better for density error, negative log-likelihood, and time. In this
+experiment, SVGD produced the more accurate learned density, while Langevin
+was about 8.6 times faster. This is the conclusion of this particular
 controlled experiment; it is not a claim that one method is always better.
 
 ![Accuracy and runtime comparison](experiments/1D/results/ebm_svgd_langevin_comparison_1d.png)
 
-The next figure compares the true density and energy with the mean learned
-curves across the 10 seeds. The shaded areas show the variation between runs.
+### How to read the comparison figure
+
+Each coloured dot is one trained model. Blue represents SVGD and orange
+represents Langevin. A pale line connects results obtained with the same random
+seed, so each pair began under matching conditions. The black diamond shows
+the average of the 10 runs.
+
+- **Density error:** measures the area between the learned and exact density
+  after squaring their difference. Zero would be a perfect match. SVGD is lower
+  for every paired seed.
+- **Test negative log-likelihood:** measures how well the model assigns
+  probability to a separate set of target samples. Lower is better, and SVGD
+  is again slightly lower.
+- **Training time:** measures the complete model-training time. Langevin is
+  clearly faster because it updates particles independently, while SVGD must
+  calculate interactions between particles.
+
+The second figure shows what those numerical errors look like as curves.
 
 ![Learned density and energy curves](experiments/1D/results/ebm_svgd_langevin_curves_1d.png)
+
+### How to read the curve figure
+
+The black line is the exact answer. Blue is the average SVGD model and orange
+is the average Langevin model. Each shaded band is one standard deviation
+across the 10 seeds; it shows how much the trained result changed when the
+random seed changed.
+
+- **Learned density, on the left:** both methods recover the smaller mode near
+  `-2` and the larger mode near `2`. The SVGD average remains closer to the
+  exact curve, which agrees with its lower density error.
+- **Learned energy, on the right:** low points correspond to probable regions
+  and high points to unlikely regions. The energy is displayed as
+  `-log p(x)`, which puts all runs on the same meaningful scale. Differences at
+  the far edges look larger because the true density there is extremely small.
+
+Together, the figures show the same trade-off from two perspectives: the
+learned shape and the numerical measurements.
 
 ## How to run the final experiment
 

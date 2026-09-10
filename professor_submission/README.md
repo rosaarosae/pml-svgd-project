@@ -82,16 +82,43 @@ Langevin was substantially cheaper to run.
 
 ![Comparison across the ten paired seeds](code/results/ebm_svgd_langevin_comparison_1d.png)
 
-In this figure, each pale line joins SVGD and Langevin results from the same
-seed. The black diamond is the average. The first two panels measure fit and
-the last measures time.
+### How to read this figure
+
+Each coloured dot is one trained model: blue for SVGD and orange for
+Langevin. A pale line connects runs with the same seed, so it shows a direct
+paired comparison. The black diamond is the average over all 10 seeds.
+
+- The **left panel** is the integrated squared density error. It measures the
+  difference between the learned and exact density over the full grid. Zero
+  would be perfect, so lower is better. SVGD is lower in every pair.
+- The **middle panel** is the negative log-likelihood on independent test
+  samples. It measures how much probability the model assigns to new target
+  data. Lower is better; SVGD is slightly better here as well.
+- The **right panel** is the complete training time. Lower is faster. Langevin
+  is much faster because SVGD calculates interactions between particles,
+  whereas Langevin updates them independently.
 
 ![Exact and learned curves](code/results/ebm_svgd_langevin_curves_1d.png)
 
-The black curve is the exact target. The coloured curves are the averages over
-10 trained models, and the shaded bands show one standard deviation between
-seeds. Both methods recover the two modes; SVGD follows the exact density more
-closely on average.
+### How to read this figure
+
+The black curve is the exact answer. The blue and orange curves are the
+averages of the 10 SVGD and 10 Langevin models. The shaded areas show one
+standard deviation across seeds, so they represent variation between training
+runs rather than a new distribution.
+
+- The **left panel** shows normalized probability density. Both methods learn
+  the smaller peak near `-2` and the larger peak near `2`. SVGD follows the
+  exact curve more closely on average, matching the density-error result.
+- The **right panel** shows normalized energy as `-log p(x)`. Low energy means
+  high probability, so its valleys correspond to the two modes. Writing the
+  energy this way removes its arbitrary additive offset and makes the trained
+  models directly comparable. Deviations near the edges are visually large
+  because the true probability in those regions is already extremely small.
+
+The first figure answers “how large is the difference?” and “how long does it
+take?”, while the second shows where the learned distributions agree or differ
+from the target.
 
 ## How to reproduce it
 
